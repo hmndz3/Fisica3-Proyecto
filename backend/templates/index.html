@@ -317,7 +317,13 @@
             
             .area-visualizacion {
                 grid-template-columns: 1fr;
-                grid-template-rows: auto auto 1fr;
+                grid-template-rows: 150px 150px 250px;
+                max-height: 600px;
+            }
+            
+            .pantalla-principal {
+                min-height: 230px;
+                max-height: 250px;
             }
         }
 
@@ -373,7 +379,7 @@
                 <button class="btn-modo activo" id="btn-modo-manual">Manual</button>
                 <button class="btn-modo" id="btn-modo-lissajous">Lissajous</button>
                 <span class="status-indicator activo" id="status-conexion"></span>
-                <span id="status-texto">Conectado</span>
+                <span id="status-texto">Simulación</span>
             </div>
         </header>
 
@@ -538,12 +544,10 @@
         </div>
     </div>
 
-    <!-- Scripts de JavaScript -->
     <script>
         //-------------------------------------------------------------------------------------
         // VARIABLES GLOBALES PARA LA APLICACION
         //-------------------------------------------------------------------------------------
-        const API_BASE_URL = window.location.origin + '/api';
         
         // Estado actual del simulador
         let estadoActual = {
@@ -552,7 +556,16 @@
             intervalos: {
                 lissajous: null,
                 actualizacion: null
-            }
+            },
+            parametrosLissajous: {
+                frecuencia_vertical: 1.0,
+                fase_vertical: 0.0,
+                amplitud_vertical: 100,
+                frecuencia_horizontal: 1.0,
+                fase_horizontal: 0.0,
+                amplitud_horizontal: 100
+            },
+            tiempoInicioAnimacion: Date.now()
         };
 
         // Referencias a elementos del DOM
@@ -588,6 +601,22 @@
             btnReiniciarAnimacion: document.getElementById('btn-reiniciar-animacion'),
             btnPausarAnimacion: document.getElementById('btn-pausar-animacion'),
             
+            // Sliders Lissajous
+            freqVertical: document.getElementById('freq-vertical'),
+            faseVertical: document.getElementById('fase-vertical'),
+            ampVertical: document.getElementById('amp-vertical'),
+            freqHorizontal: document.getElementById('freq-horizontal'),
+            faseHorizontal: document.getElementById('fase-horizontal'),
+            ampHorizontal: document.getElementById('amp-horizontal'),
+            
+            // Displays Lissajous
+            displayFreqVertical: document.getElementById('display-freq-vertical'),
+            displayFaseVertical: document.getElementById('display-fase-vertical'),
+            displayAmpVertical: document.getElementById('display-amp-vertical'),
+            displayFreqHorizontal: document.getElementById('display-freq-horizontal'),
+            displayFaseHorizontal: document.getElementById('display-fase-horizontal'),
+            displayAmpHorizontal: document.getElementById('display-amp-horizontal'),
+            
             // Panel de información
             infoPanel: document.getElementById('info-panel'),
             statusConexion: document.getElementById('status-conexion'),
@@ -602,7 +631,6 @@
             
             inicializarEventListeners();
             inicializarCanvas();
-            cargarParametrosSistema();
             actualizarInterfaz();
             
             console.log('✅ Simulador CRT iniciado correctamente');
@@ -616,16 +644,30 @@
             elementos.btnModoManual.addEventListener('click', () => cambiarModo('manual'));
             elementos.btnModoLissajous.addEventListener('click', () => cambiarModo('lissajous'));
             
-            // Sliders modo manual
+            // Sliders modo manual - eventos input y change
             elementos.voltajeAceleracion.addEventListener('input', actualizarValorDisplay);
             elementos.voltajeVertical.addEventListener('input', actualizarValorDisplay);
             elementos.voltajeHorizontal.addEventListener('input', actualizarValorDisplay);
             elementos.tiempoPersistencia.addEventListener('input', actualizarValorDisplay);
             
-            // Eventos de cambio para recalcular posición
             elementos.voltajeAceleracion.addEventListener('change', actualizarSimulacion);
             elementos.voltajeVertical.addEventListener('change', actualizarSimulacion);
             elementos.voltajeHorizontal.addEventListener('change', actualizarSimulacion);
+            
+            // Sliders Lissajous - eventos input y change
+            elementos.freqVertical.addEventListener('input', actualizarValorDisplayLissajous);
+            elementos.faseVertical.addEventListener('input', actualizarValorDisplayLissajous);
+            elementos.ampVertical.addEventListener('input', actualizarValorDisplayLissajous);
+            elementos.freqHorizontal.addEventListener('input', actualizarValorDisplayLissajous);
+            elementos.faseHorizontal.addEventListener('input', actualizarValorDisplayLissajous);
+            elementos.ampHorizontal.addEventListener('input', actualizarValorDisplayLissajous);
+            
+            elementos.freqVertical.addEventListener('change', actualizarParametrosLissajous);
+            elementos.faseVertical.addEventListener('change', actualizarParametrosLissajous);
+            elementos.ampVertical.addEventListener('change', actualizarParametrosLissajous);
+            elementos.freqHorizontal.addEventListener('change', actualizarParametrosLissajous);
+            elementos.faseHorizontal.addEventListener('change', actualizarParametrosLissajous);
+            elementos.ampHorizontal.addEventListener('change', actualizarParametrosLissajous);
             
             // Controles Lissajous
             elementos.btnAplicarPreset.addEventListener('click', aplicarPresetLissajous);
@@ -652,66 +694,6 @@
             dibujarEstructuraCRT();
             
             console.log('✅ Canvas inicializados');
-        }
-
-        //-------------------------------------------------------------------------------------
-        // FUNCIONES DE COMUNICACION CON EL BACKEND
-        //-------------------------------------------------------------------------------------
-        async function realizarPeticionAPI(endpoint, metodo = 'GET', datos = null) {
-            try {
-                const opciones = {
-                    method: metodo,
-                    headers: {
-                        'Content-Type': 'application/json',
-                    }
-                };
-                
-                if (datos && metodo !== 'GET') {
-                    opciones.body = JSON.stringify(datos);
-                }
-                
-                const respuesta = await fetch(API_BASE_URL + endpoint, opciones);
-                const resultado = await respuesta.json();
-                
-                if (!resultado.success) {
-                    throw new Error(resultado.error);
-                }
-                
-                actualizarStatusConexion(true);
-                return resultado.data;
-                
-            } catch (error) {
-                console.error('Error en petición API:', error);
-                actualizarStatusConexion(false, error.message);
-                throw error;
-            }
-        }
-
-        async function cargarParametrosSistema() {
-            try {
-                const parametros = await realizarPeticionAPI('/parametros-sistema');
-                console.log('📊 Parámetros del sistema cargados:', parametros);
-                
-                // Actualizar rangos de sliders basados en parámetros del sistema
-                const rangos = parametros.rangos_voltaje;
-                
-                elementos.voltajeAceleracion.min = rangos.aceleracion.min;
-                elementos.voltajeAceleracion.max = rangos.aceleracion.max;
-                elementos.voltajeAceleracion.value = rangos.aceleracion.default;
-                
-                elementos.voltajeVertical.min = rangos.vertical.min;
-                elementos.voltajeVertical.max = rangos.vertical.max;
-                elementos.voltajeVertical.value = rangos.vertical.default;
-                
-                elementos.voltajeHorizontal.min = rangos.horizontal.min;
-                elementos.voltajeHorizontal.max = rangos.horizontal.max;
-                elementos.voltajeHorizontal.value = rangos.horizontal.default;
-                
-                actualizarValoresDisplay();
-                
-            } catch (error) {
-                console.error('Error cargando parámetros del sistema:', error);
-            }
         }
 
         //-------------------------------------------------------------------------------------
@@ -746,7 +728,15 @@
 
         function actualizarValorDisplay(event) {
             const slider = event.target;
-            const displayId = 'display-' + slider.id.split('-').slice(-1)[0];
+            const sliderId = slider.id;
+            let displayId = '';
+            
+            // Mapear sliders a sus displays correspondientes
+            if (sliderId === 'voltaje-aceleracion') displayId = 'display-aceleracion';
+            else if (sliderId === 'voltaje-vertical') displayId = 'display-vertical';
+            else if (sliderId === 'voltaje-horizontal') displayId = 'display-horizontal';
+            else if (sliderId === 'tiempo-persistencia') displayId = 'display-persistencia';
+            
             const display = document.getElementById(displayId);
             
             if (display) {
@@ -754,56 +744,187 @@
                 let unidad = '';
                 
                 // Determinar unidad según el tipo de control
-                if (slider.id.includes('voltaje') || slider.id.includes('amp')) {
+                if (sliderId.includes('voltaje')) {
                     unidad = ' V';
-                } else if (slider.id.includes('tiempo')) {
+                } else if (sliderId.includes('tiempo')) {
                     unidad = ' s';
-                } else if (slider.id.includes('freq')) {
-                    unidad = ' Hz';
-                } else if (slider.id.includes('fase')) {
-                    unidad = '°';
                 }
                 
-                display.textContent = valor.toFixed(slider.step < 1 ? 1 : 0) + unidad;
+                display.textContent = valor.toFixed(sliderId.includes('tiempo') ? 1 : 0) + unidad;
+            }
+        }
+
+        function actualizarValorDisplayLissajous(event) {
+            const slider = event.target;
+            const sliderId = slider.id;
+            let displayId = '';
+            
+            // Mapear sliders Lissajous a sus displays
+            if (sliderId === 'freq-vertical') displayId = 'display-freq-vertical';
+            else if (sliderId === 'fase-vertical') displayId = 'display-fase-vertical';
+            else if (sliderId === 'amp-vertical') displayId = 'display-amp-vertical';
+            else if (sliderId === 'freq-horizontal') displayId = 'display-freq-horizontal';
+            else if (sliderId === 'fase-horizontal') displayId = 'display-fase-horizontal';
+            else if (sliderId === 'amp-horizontal') displayId = 'display-amp-horizontal';
+            
+            const display = document.getElementById(displayId);
+            
+            if (display) {
+                let valor = parseFloat(slider.value);
+                let unidad = '';
+                
+                // Determinar unidad según el tipo de control
+                if (sliderId.includes('freq')) {
+                    unidad = ' Hz';
+                } else if (sliderId.includes('fase')) {
+                    unidad = '°';
+                } else if (sliderId.includes('amp')) {
+                    unidad = ' V';
+                }
+                
+                display.textContent = valor.toFixed(sliderId.includes('freq') ? 1 : 0) + unidad;
+            }
+        }
+
+        function actualizarParametrosLissajous() {
+            // Actualizar parámetros internos
+            estadoActual.parametrosLissajous = {
+                frecuencia_vertical: parseFloat(elementos.freqVertical.value),
+                fase_vertical: parseFloat(elementos.faseVertical.value) * Math.PI / 180, // Convertir a radianes
+                amplitud_vertical: parseFloat(elementos.ampVertical.value),
+                frecuencia_horizontal: parseFloat(elementos.freqHorizontal.value),
+                fase_horizontal: parseFloat(elementos.faseHorizontal.value) * Math.PI / 180, // Convertir a radianes
+                amplitud_horizontal: parseFloat(elementos.ampHorizontal.value)
+            };
+            
+            // Reiniciar animación si está en modo Lissajous
+            if (estadoActual.modo === 'lissajous') {
+                estadoActual.tiempoInicioAnimacion = Date.now();
             }
         }
 
         function actualizarValoresDisplay() {
             // Actualizar todos los displays de valores
-            const sliders = document.querySelectorAll('.slider');
-            sliders.forEach(slider => {
-                const event = { target: slider };
-                actualizarValorDisplay(event);
+            const slidersManual = [
+                elementos.voltajeAceleracion,
+                elementos.voltajeVertical,
+                elementos.voltajeHorizontal,
+                elementos.tiempoPersistencia
+            ];
+            
+            slidersManual.forEach(slider => {
+                if (slider) {
+                    const event = { target: slider };
+                    actualizarValorDisplay(event);
+                }
             });
-        }
-
-        function actualizarStatusConexion(conectado, mensaje = '') {
-            elementos.statusConexion.classList.toggle('activo', conectado);
-            elementos.statusTexto.textContent = conectado ? 'Conectado' : 'Error: ' + mensaje;
+            
+            const slidersLissajous = [
+                elementos.freqVertical,
+                elementos.faseVertical,
+                elementos.ampVertical,
+                elementos.freqHorizontal,
+                elementos.faseHorizontal,
+                elementos.ampHorizontal
+            ];
+            
+            slidersLissajous.forEach(slider => {
+                if (slider) {
+                    const event = { target: slider };
+                    actualizarValorDisplayLissajous(event);
+                }
+            });
         }
 
         //-------------------------------------------------------------------------------------
         // FUNCIONES DE SIMULACION Y CALCULO
         //-------------------------------------------------------------------------------------
-        async function actualizarSimulacion() {
+        function calcularPosicionElectron(voltajeAceleracion, voltajeVertical, voltajeHorizontal) {
+            // Constantes físicas simplificadas
+            const CARGA_ELECTRON = -1.602e-19;
+            const MASA_ELECTRON = 9.109e-31;
+            
+            // Parámetros del CRT (simplificados)
+            const DISTANCIA_PLACAS = 0.015; // 1.5 cm separación entre placas
+            const LONGITUD_PLACAS = 0.04; // 4 cm longitud de placas
+            const DISTANCIA_A_PANTALLA = 0.15; // 15 cm hasta la pantalla
+            
+            // Calcular velocidad inicial
+            const energiaCinetica = Math.abs(CARGA_ELECTRON) * voltajeAceleracion;
+            const velocidadInicial = Math.sqrt(2 * energiaCinetica / MASA_ELECTRON);
+            
+            // Calcular deflexión vertical
+            const campoVertical = voltajeVertical / DISTANCIA_PLACAS;
+            const aceleracionVertical = (CARGA_ELECTRON * campoVertical) / MASA_ELECTRON;
+            const tiempoEnPlacasV = LONGITUD_PLACAS / velocidadInicial;
+            const deflexionVertical = 0.5 * aceleracionVertical * Math.pow(tiempoEnPlacasV, 2);
+            const velocidadVertical = aceleracionVertical * tiempoEnPlacasV;
+            
+            // Calcular deflexión horizontal
+            const campoHorizontal = voltajeHorizontal / DISTANCIA_PLACAS;
+            const aceleracionHorizontal = (CARGA_ELECTRON * campoHorizontal) / MASA_ELECTRON;
+            const tiempoEnPlacasH = LONGITUD_PLACAS / velocidadInicial;
+            const deflexionHorizontal = 0.5 * aceleracionHorizontal * Math.pow(tiempoEnPlacasH, 2);
+            const velocidadHorizontal = aceleracionHorizontal * tiempoEnPlacasH;
+            
+            // Deflexión adicional en vuelo libre
+            const tiempoVueloLibre = DISTANCIA_A_PANTALLA / velocidadInicial;
+            const deflexionVerticalLibre = velocidadVertical * tiempoVueloLibre;
+            const deflexionHorizontalLibre = velocidadHorizontal * tiempoVueloLibre;
+            
+            // Posición final
+            const posicionX = deflexionHorizontal + deflexionHorizontalLibre;
+            const posicionY = deflexionVertical + deflexionVerticalLibre;
+            
+            // Verificar si está dentro de la pantalla (20cm x 20cm)
+            const TAMANO_PANTALLA = 0.10; // 10 cm radio
+            const dentropantalla = Math.abs(posicionX) <= TAMANO_PANTALLA && Math.abs(posicionY) <= TAMANO_PANTALLA;
+            
+            return {
+                posicion_x: posicionX,
+                posicion_y: posicionY,
+                dentro_pantalla: dentropantalla,
+                velocidad_inicial: velocidadInicial,
+                velocidad_final_x: velocidadHorizontal,
+                velocidad_final_y: velocidadVertical
+            };
+        }
+
+        function actualizarSimulacion() {
             if (estadoActual.modo !== 'manual') return;
             
-            try {
-                const voltajes = {
-                    voltaje_aceleracion: parseFloat(elementos.voltajeAceleracion.value),
-                    voltaje_vertical: parseFloat(elementos.voltajeVertical.value),
-                    voltaje_horizontal: parseFloat(elementos.voltajeHorizontal.value)
-                };
-                
-                const resultado = await realizarPeticionAPI('/calcular-posicion', 'POST', voltajes);
-                
-                // Actualizar visualización
-                actualizarVisualizacion(resultado);
-                actualizarInfoPanel(resultado);
-                
-            } catch (error) {
-                console.error('Error actualizando simulación:', error);
-            }
+            const voltajes = {
+                voltaje_aceleracion: parseFloat(elementos.voltajeAceleracion.value),
+                voltaje_vertical: parseFloat(elementos.voltajeVertical.value),
+                voltaje_horizontal: parseFloat(elementos.voltajeHorizontal.value)
+            };
+            
+            const resultado = calcularPosicionElectron(
+                voltajes.voltaje_aceleracion,
+                voltajes.voltaje_vertical,
+                voltajes.voltaje_horizontal
+            );
+            
+            // Actualizar visualización
+            actualizarVisualizacion(resultado);
+            actualizarInfoPanel(resultado);
+        }
+
+        function generarVoltajesLissajous(tiempo) {
+            const config = estadoActual.parametrosLissajous;
+            
+            const voltajeVertical = config.amplitud_vertical * Math.sin(
+                2 * Math.PI * config.frecuencia_vertical * tiempo + config.fase_vertical
+            );
+            
+            const voltajeHorizontal = config.amplitud_horizontal * Math.sin(
+                2 * Math.PI * config.frecuencia_horizontal * tiempo + config.fase_horizontal
+            );
+            
+            return {
+                voltaje_vertical: Math.max(-200, Math.min(200, voltajeVertical)),
+                voltaje_horizontal: Math.max(-200, Math.min(200, voltajeHorizontal))
+            };
         }
 
         function iniciarAnimacionLissajous() {
@@ -811,19 +932,25 @@
                 clearInterval(estadoActual.intervalos.lissajous);
             }
             
-            estadoActual.intervalos.lissajous = setInterval(async () => {
-                try {
-                    const datos = await realizarPeticionAPI('/voltajes-lissajous-tiempo-real');
-                    
-                    if (datos.voltajes && datos.posicion) {
-                        actualizarVisualizacionLissajous(datos);
-                        actualizarInfoPanel(datos.posicion);
-                    }
-                    
-                } catch (error) {
-                    console.error('Error en animación Lissajous:', error);
-                }
-            }, 1000 / 30); // 30 FPS
+            estadoActual.tiempoInicioAnimacion = Date.now();
+            
+            estadoActual.intervalos.lissajous = setInterval(() => {
+                const tiempoTranscurrido = (Date.now() - estadoActual.tiempoInicioAnimacion) / 1000; // en segundos
+                
+                const voltajes = generarVoltajesLissajous(tiempoTranscurrido);
+                const voltajeAceleracion = parseFloat(elementos.voltajeAceleracion.value);
+                
+                const resultado = calcularPosicionElectron(
+                    voltajeAceleracion,
+                    voltajes.voltaje_vertical,
+                    voltajes.voltaje_horizontal
+                );
+                
+                // Actualizar visualización Lissajous
+                actualizarVisualizacionLissajous(resultado, voltajes);
+                actualizarInfoPanel(resultado);
+                
+            }, 1000 / 60); // 60 FPS
             
             estadoActual.animacionActiva = true;
             elementos.btnPausarAnimacion.textContent = 'Pausar';
@@ -833,7 +960,6 @@
         // FUNCIONES DE RENDERIZADO Y VISUALIZACION
         //-------------------------------------------------------------------------------------
         function dibujarEstructuraCRT() {
-            // Dibujar la estructura básica del CRT en cada vista
             dibujarVistaLateral();
             dibujarVistaSuperior();
             limpiarPantalla();
@@ -869,6 +995,49 @@
             // Placa inferior
             ctx.fillRect(placasX, placasY + separacion/2, placasAncho, placasAlto);
             ctx.strokeRect(placasX, placasY + separacion/2, placasAncho, placasAlto);
+            
+            // Dibujar pantalla
+            ctx.fillRect(width - 40, 20, 20, height - 40);
+            ctx.strokeRect(width - 40, 20, 20, height - 40);
+            
+            // Etiquetas
+            ctx.fillStyle = '#00ff41';
+            ctx.font = '12px monospace';
+            ctx.fillText('Cañón', 15, height/2 - 15);
+            ctx.fillText('Placas V', 110, height/2 - 40);
+            ctx.fillText('Pantalla', width - 80, 15);
+        }
+
+        function dibujarVistaSuperior() {
+            const ctx = elementos.canvasSuperior.getContext('2d');
+            const width = elementos.canvasSuperior.width;
+            const height = elementos.canvasSuperior.height;
+            
+            ctx.clearRect(0, 0, width, height);
+            
+            // Configurar estilo
+            ctx.strokeStyle = '#00ff41';
+            ctx.lineWidth = 2;
+            ctx.fillStyle = 'rgba(0, 255, 65, 0.1)';
+            
+            // Dibujar cañón de electrones
+            ctx.fillRect(20, height/2 - 10, 30, 20);
+            ctx.strokeRect(20, height/2 - 10, 30, 20);
+            
+            // Dibujar placas de deflexión horizontal
+            const placasX = 200;
+            const placasY = height/2;
+            const placasAncho = 8;
+            const placasAlto = 40;
+            const separacion = 30;
+            
+            // Placa izquierda
+            ctx.fillRect(placasX - separacion/2 - placasAncho, placasY - placasAlto/2, placasAncho, placasAlto);
+            ctx.strokeRect(placasX - separacion/2 - placasAncho, placasY - placasAlto/2, placasAncho, placasAlto);
+            
+            // Placa derecha
+            ctx.fillRect(placasX + separacion/2, placasY - placasAlto/2, placasAncho, placasAlto);
+            ctx.strokeRect(placasX + separacion/2, placasY - placasAlto/2, placasAncho, placasAlto);
             
             // Dibujar pantalla
             ctx.fillRect(width - 40, 20, 20, height - 40);
@@ -955,7 +1124,7 @@
                 // Desde el cañón
                 ctx.moveTo(50, height/2);
                 // Hasta las placas verticales (con deflexión)
-                const deflexionY = resultado.posicion_y * 500; // Escalar para visualización
+                const deflexionY = resultado.posicion_y * 1000; // Escalar para visualización
                 ctx.lineTo(120, height/2);
                 ctx.lineTo(160, height/2 + deflexionY);
                 // Hasta la pantalla
@@ -993,10 +1162,10 @@
                 // Desde el cañón
                 ctx.moveTo(50, height/2);
                 // Hasta las placas horizontales
-                ctx.lineTo(200, height/2);
+                ctx.lineTo(180, height/2);
                 // Con deflexión horizontal
-                const deflexionX = resultado.posicion_x * 500; // Escalar para visualización
-                ctx.lineTo(240, height/2 + deflexionX);
+                const deflexionX = resultado.posicion_x * 1000; // Escalar para visualización
+                ctx.lineTo(220, height/2 + deflexionX);
                 // Hasta la pantalla
                 ctx.lineTo(width - 40, height/2 + deflexionX * 1.5);
                 ctx.stroke();
@@ -1028,7 +1197,7 @@
                 const centroY = height / 2;
                 
                 // Escalar las coordenadas (resultado está en metros)
-                const escala = 1000; // 1000 pixels por metro
+                const escala = 2000; // 2000 pixels por metro
                 const puntoX = centroX + (resultado.posicion_x * escala);
                 const puntoY = centroY - (resultado.posicion_y * escala); // Invertir Y para canvas
                 
@@ -1052,45 +1221,42 @@
             }
         }
 
-        function actualizarVisualizacionLissajous(datos) {
+        function actualizarVisualizacionLissajous(resultado, voltajes) {
             const ctx = elementos.canvasPantalla.getContext('2d');
             const width = elementos.canvasPantalla.width;
             const height = elementos.canvasPantalla.height;
             
             // Aplicar efecto de fade para crear trail
             const tiempoPersistencia = parseFloat(elementos.tiempoPersistencia.value);
-            const alpha = 1.0 / (tiempoPersistencia * 30); // Ajustar según FPS
+            const alpha = Math.min(0.02, 1.0 / (tiempoPersistencia * 60)); // Ajustar según FPS
             
             ctx.fillStyle = `rgba(0, 0, 0, ${alpha})`;
             ctx.fillRect(0, 0, width, height);
             
-            // Redibujar grid con menos opacidad
-            ctx.strokeStyle = 'rgba(0, 255, 65, 0.05)';
-            ctx.lineWidth = 1;
-            
-            // Grid simplificado para mejor performance
-            for (let x = 0; x < width; x += 40) {
+            // Redibujar grid con menos opacidad cada ciertos frames
+            if (Math.random() < 0.1) { // Solo 10% del tiempo para mejor performance
+                ctx.strokeStyle = 'rgba(0, 255, 65, 0.05)';
+                ctx.lineWidth = 1;
+                
+                // Cruz central
                 ctx.beginPath();
-                ctx.moveTo(x, 0);
-                ctx.lineTo(x, height);
+                ctx.moveTo(width/2, 0);
+                ctx.lineTo(width/2, height);
                 ctx.stroke();
-            }
-            
-            for (let y = 0; y < height; y += 40) {
                 ctx.beginPath();
-                ctx.moveTo(0, y);
-                ctx.lineTo(width, y);
+                ctx.moveTo(0, height/2);
+                ctx.lineTo(width, height/2);
                 ctx.stroke();
             }
             
             // Dibujar nuevo punto
-            if (datos.posicion.dentro_pantalla) {
+            if (resultado.dentro_pantalla) {
                 const centroX = width / 2;
                 const centroY = height / 2;
-                const escala = 1000;
+                const escala = 2000;
                 
-                const puntoX = centroX + (datos.posicion.posicion_x * escala);
-                const puntoY = centroY - (datos.posicion.posicion_y * escala);
+                const puntoX = centroX + (resultado.posicion_x * escala);
+                const puntoY = centroY - (resultado.posicion_y * escala);
                 
                 // Punto principal
                 ctx.fillStyle = '#00ff41';
@@ -1098,13 +1264,13 @@
                 ctx.shadowBlur = 15;
                 
                 ctx.beginPath();
-                ctx.arc(puntoX, puntoY, 3, 0, 2 * Math.PI);
+                ctx.arc(puntoX, puntoY, 2, 0, 2 * Math.PI);
                 ctx.fill();
                 
                 // Efecto de brillo
                 ctx.globalAlpha = 0.7;
                 ctx.beginPath();
-                ctx.arc(puntoX, puntoY, 6, 0, 2 * Math.PI);
+                ctx.arc(puntoX, puntoY, 4, 0, 2 * Math.PI);
                 ctx.fill();
                 ctx.globalAlpha = 1.0;
                 
@@ -1122,7 +1288,7 @@
         //-------------------------------------------------------------------------------------
         // FUNCIONES PARA CONTROL DE LISSAJOUS
         //-------------------------------------------------------------------------------------
-        async function aplicarPresetLissajous() {
+        function aplicarPresetLissajous() {
             const presetSeleccionado = elementos.presetSelector.value;
             
             if (!presetSeleccionado) {
@@ -1130,27 +1296,88 @@
                 return;
             }
             
-            try {
-                await realizarPeticionAPI('/aplicar-preset-lissajous', 'POST', {
-                    preset: presetSeleccionado
-                });
+            // Presets predefinidos
+            const presets = {
+                'circulo': {
+                    frecuencia_vertical: 1.0,
+                    fase_vertical: 0,
+                    amplitud_vertical: 100,
+                    frecuencia_horizontal: 1.0,
+                    fase_horizontal: 90,
+                    amplitud_horizontal: 100
+                },
+                'linea_diagonal': {
+                    frecuencia_vertical: 1.0,
+                    fase_vertical: 0,
+                    amplitud_vertical: 100,
+                    frecuencia_horizontal: 1.0,
+                    fase_horizontal: 0,
+                    amplitud_horizontal: 100
+                },
+                'elipse': {
+                    frecuencia_vertical: 1.0,
+                    fase_vertical: 0,
+                    amplitud_vertical: 100,
+                    frecuencia_horizontal: 1.0,
+                    fase_horizontal: 45,
+                    amplitud_horizontal: 100
+                },
+                'ocho': {
+                    frecuencia_vertical: 2.0,
+                    fase_vertical: 0,
+                    amplitud_vertical: 100,
+                    frecuencia_horizontal: 1.0,
+                    fase_horizontal: 0,
+                    amplitud_horizontal: 100
+                },
+                'trebol': {
+                    frecuencia_vertical: 3.0,
+                    fase_vertical: 0,
+                    amplitud_vertical: 100,
+                    frecuencia_horizontal: 1.0,
+                    fase_horizontal: 0,
+                    amplitud_horizontal: 100
+                },
+                'mariposa': {
+                    frecuencia_vertical: 3.0,
+                    fase_vertical: 0,
+                    amplitud_vertical: 100,
+                    frecuencia_horizontal: 2.0,
+                    fase_horizontal: 30,
+                    amplitud_horizontal: 100
+                }
+            };
+            
+            const preset = presets[presetSeleccionado];
+            if (preset) {
+                // Actualizar sliders
+                elementos.freqVertical.value = preset.frecuencia_vertical;
+                elementos.faseVertical.value = preset.fase_vertical;
+                elementos.ampVertical.value = preset.amplitud_vertical;
+                elementos.freqHorizontal.value = preset.frecuencia_horizontal;
+                elementos.faseHorizontal.value = preset.fase_horizontal;
+                elementos.ampHorizontal.value = preset.amplitud_horizontal;
+                
+                // Actualizar displays
+                actualizarValoresDisplay();
+                
+                // Actualizar parámetros internos
+                actualizarParametrosLissajous();
                 
                 console.log(`✅ Preset aplicado: ${presetSeleccionado}`);
                 
-                // Reiniciar animación con el nuevo preset
+                // Limpiar pantalla y reiniciar animación
                 if (estadoActual.modo === 'lissajous') {
+                    limpiarPantalla();
                     iniciarAnimacionLissajous();
                 }
-                
-            } catch (error) {
-                console.error('Error aplicando preset:', error);
-                alert('Error aplicando preset: ' + error.message);
             }
         }
 
         function reiniciarAnimacion() {
             if (estadoActual.modo === 'lissajous') {
                 limpiarPantalla();
+                estadoActual.tiempoInicioAnimacion = Date.now();
                 iniciarAnimacionLissajous();
                 console.log('🔄 Animación Lissajous reiniciada');
             }
@@ -1180,6 +1407,9 @@
             // Actualizar displays de valores iniciales
             actualizarValoresDisplay();
             
+            // Actualizar parámetros de Lissajous
+            actualizarParametrosLissajous();
+            
             // Configurar modo inicial
             cambiarModo('manual');
             
@@ -1202,54 +1432,12 @@
         // Debugging en consola
         window.simuladorCRT = {
             estado: () => estadoActual,
-            api: realizarPeticionAPI,
-            reiniciar: () => location.reload()
+            reiniciar: () => location.reload(),
+            cambiarModo: cambiarModo,
+            parametros: () => estadoActual.parametrosLissajous
         };
 
         console.log('🔧 Herramientas de debug disponibles en window.simuladorCRT');
     </script>
 </body>
-</html> '12px monospace';
-            ctx.fillText('Cañón', 15, height/2 - 15);
-            ctx.fillText('Placas V', 100, height/2 - 40);
-            ctx.fillText('Pantalla', width - 80, 15);
-        }
-
-        function dibujarVistaSuperior() {
-            const ctx = elementos.canvasSuperior.getContext('2d');
-            const width = elementos.canvasSuperior.width;
-            const height = elementos.canvasSuperior.height;
-            
-            ctx.clearRect(0, 0, width, height);
-            
-            // Configurar estilo
-            ctx.strokeStyle = '#00ff41';
-            ctx.lineWidth = 2;
-            ctx.fillStyle = 'rgba(0, 255, 65, 0.1)';
-            
-            // Dibujar cañón de electrones
-            ctx.fillRect(20, height/2 - 10, 30, 20);
-            ctx.strokeRect(20, height/2 - 10, 30, 20);
-            
-            // Dibujar placas de deflexión horizontal
-            const placasX = 200;
-            const placasY = height/2;
-            const placasAncho = 8;
-            const placasAlto = 40;
-            const separacion = 30;
-            
-            // Placa izquierda
-            ctx.fillRect(placasX - separacion/2 - placasAncho, placasY - placasAlto/2, placasAncho, placasAlto);
-            ctx.strokeRect(placasX - separacion/2 - placasAncho, placasY - placasAlto/2, placasAncho, placasAlto);
-            
-            // Placa derecha
-            ctx.fillRect(placasX + separacion/2, placasY - placasAlto/2, placasAncho, placasAlto);
-            ctx.strokeRect(placasX + separacion/2, placasY - placasAlto/2, placasAncho, placasAlto);
-            
-            // Dibujar pantalla
-            ctx.fillRect(width - 40, 20, 20, height - 40);
-            ctx.strokeRect(width - 40, 20, 20, height - 40);
-            
-            // Etiquetas
-            ctx.fillStyle = '#00ff41';
-            ctx.font =
+</html>
