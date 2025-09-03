@@ -6,7 +6,7 @@
 
 import math
 import numpy as np
-from crt_parameters import *
+import crt_parameters
 
 #-------------------------------------------------------------------------------------
 # PARAMETROS DE LAS SEÑALES SINUSOIDALES
@@ -38,11 +38,11 @@ def validar_fase(fase):
 
 def validar_amplitud_vertical(amplitud):
     """Valida que la amplitud vertical no exceda los rangos de voltaje."""
-    return amplitud <= min(abs(VOLTAJE_VERTICAL_MIN), abs(VOLTAJE_VERTICAL_MAX))
+    return amplitud <= min(abs(crt_parameters.VOLTAJE_VERTICAL_MIN), abs(crt_parameters.VOLTAJE_VERTICAL_MAX))
 
 def validar_amplitud_horizontal(amplitud):
     """Valida que la amplitud horizontal no exceda los rangos de voltaje."""
-    return amplitud <= min(abs(VOLTAJE_HORIZONTAL_MIN), abs(VOLTAJE_HORIZONTAL_MAX))
+    return amplitud <= min(abs(crt_parameters.VOLTAJE_HORIZONTAL_MIN), abs(crt_parameters.VOLTAJE_HORIZONTAL_MAX))
 
 #-------------------------------------------------------------------------------------
 # FUNCIONES GENERADORAS DE SEÑALES SINUSOIDALES
@@ -65,7 +65,7 @@ def generar_senal_vertical(tiempo, frecuencia_vertical, fase_vertical, amplitud_
     voltaje_vertical = amplitud_vertical * math.sin(2 * math.pi * frecuencia_vertical * tiempo + fase_vertical)
     
     # Asegurar que este dentro de los limites de voltaje
-    voltaje_vertical = max(VOLTAJE_VERTICAL_MIN, min(VOLTAJE_VERTICAL_MAX, voltaje_vertical))
+    voltaje_vertical = max(crt_parameters.VOLTAJE_VERTICAL_MIN, min(crt_parameters.VOLTAJE_VERTICAL_MAX, voltaje_vertical))
     
     return voltaje_vertical
 
@@ -87,7 +87,7 @@ def generar_senal_horizontal(tiempo, frecuencia_horizontal, fase_horizontal, amp
     voltaje_horizontal = amplitud_horizontal * math.sin(2 * math.pi * frecuencia_horizontal * tiempo + fase_horizontal)
     
     # Asegurar que este dentro de los limites de voltaje
-    voltaje_horizontal = max(VOLTAJE_HORIZONTAL_MIN, min(VOLTAJE_HORIZONTAL_MAX, voltaje_horizontal))
+    voltaje_horizontal = max(crt_parameters.VOLTAJE_HORIZONTAL_MIN, min(crt_parameters.VOLTAJE_HORIZONTAL_MAX, voltaje_horizontal))
     
     return voltaje_horizontal
 
@@ -321,13 +321,13 @@ def obtener_info_lissajous():
             },
             'amplitud_vertical': {
                 'min': 0,
-                'max': min(abs(VOLTAJE_VERTICAL_MIN), abs(VOLTAJE_VERTICAL_MAX)),
+                'max': min(abs(crt_parameters.VOLTAJE_VERTICAL_MIN), abs(crt_parameters.VOLTAJE_VERTICAL_MAX)),
                 'default': AMPLITUD_VERTICAL_DEFAULT,
                 'unidad': 'V'
             },
             'amplitud_horizontal': {
                 'min': 0,
-                'max': min(abs(VOLTAJE_HORIZONTAL_MIN), abs(VOLTAJE_HORIZONTAL_MAX)),
+                'max': min(abs(crt_parameters.VOLTAJE_HORIZONTAL_MIN), abs(crt_parameters.VOLTAJE_HORIZONTAL_MAX)),
                 'default': AMPLITUD_HORIZONTAL_DEFAULT,
                 'unidad': 'V'
             }

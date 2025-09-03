@@ -6,7 +6,7 @@
 
 import math
 import numpy as np
-from crt_parameters import *
+import crt_parameters
 
 #-------------------------------------------------------------------------------------
 # FUNCIONES DE VELOCIDAD INICIAL Y ACELERACION
@@ -17,14 +17,14 @@ def calcular_velocidad_inicial(voltaje_aceleracion):
     Usa la ecuacion de energia cinetica: (1/2)mv^2 = eV
     Por lo tanto: v = sqrt(2eV/m)
     """
-    if not validar_voltaje_aceleracion(voltaje_aceleracion):
+    if not crt_parameters.validar_voltaje_aceleracion(voltaje_aceleracion):
         raise ValueError(f"Voltaje de aceleracion fuera de rango: {voltaje_aceleracion}")
     
     # Energia cinetica ganada por el electron
-    energia_cinetica = abs(CARGA_ELECTRON) * voltaje_aceleracion
+    energia_cinetica = abs(crt_parameters.CARGA_ELECTRON) * voltaje_aceleracion
     
     # Velocidad inicial en direccion horizontal (hacia la pantalla)
-    velocidad_inicial = math.sqrt(2 * energia_cinetica / MASA_ELECTRON)
+    velocidad_inicial = math.sqrt(2 * energia_cinetica / crt_parameters.MASA_ELECTRON)
     
     return velocidad_inicial
 
@@ -36,11 +36,11 @@ def calcular_campo_electrico_vertical(voltaje_vertical):
     Calcula la intensidad del campo electrico entre las placas verticales.
     Campo uniforme: E = V/d donde d es la separacion entre placas
     """
-    if not validar_voltaje_vertical(voltaje_vertical):
+    if not crt_parameters.validar_voltaje_vertical(voltaje_vertical):
         raise ValueError(f"Voltaje vertical fuera de rango: {voltaje_vertical}")
     
     # Campo electrico vertical (positivo hacia arriba)
-    campo_electrico = voltaje_vertical / SEPARACION_PLACAS_VERTICALES
+    campo_electrico = voltaje_vertical / crt_parameters.SEPARACION_PLACAS_VERTICALES
     return campo_electrico
 
 def calcular_campo_electrico_horizontal(voltaje_horizontal):
@@ -48,11 +48,11 @@ def calcular_campo_electrico_horizontal(voltaje_horizontal):
     Calcula la intensidad del campo electrico entre las placas horizontales.
     Campo uniforme: E = V/d donde d es la separacion entre placas
     """
-    if not validar_voltaje_horizontal(voltaje_horizontal):
+    if not crt_parameters.validar_voltaje_horizontal(voltaje_horizontal):
         raise ValueError(f"Voltaje horizontal fuera de rango: {voltaje_horizontal}")
     
     # Campo electrico horizontal (positivo hacia la derecha)
-    campo_electrico = voltaje_horizontal / SEPARACION_PLACAS_HORIZONTALES
+    campo_electrico = voltaje_horizontal / crt_parameters.SEPARACION_PLACAS_HORIZONTALES
     return campo_electrico
 
 def calcular_aceleracion(campo_electrico):
@@ -60,7 +60,7 @@ def calcular_aceleracion(campo_electrico):
     Calcula la aceleracion del electron en un campo electrico.
     F = qE y F = ma, por lo tanto a = qE/m
     """
-    aceleracion = (CARGA_ELECTRON * campo_electrico) / MASA_ELECTRON
+    aceleracion = (crt_parameters.CARGA_ELECTRON * campo_electrico) / crt_parameters.MASA_ELECTRON
     return aceleracion
 
 #-------------------------------------------------------------------------------------
@@ -72,7 +72,7 @@ def calcular_movimiento_en_placas_verticales(velocidad_inicial, voltaje_vertical
     Movimiento uniformemente acelerado en direccion vertical.
     """
     # Tiempo que el electron pasa entre las placas verticales
-    tiempo_en_placas = ANCHO_PLACAS_VERTICALES / velocidad_inicial
+    tiempo_en_placas = crt_parameters.ANCHO_PLACAS_VERTICALES / velocidad_inicial
     
     # Campo electrico y aceleracion vertical
     campo_vertical = calcular_campo_electrico_vertical(voltaje_vertical)
@@ -96,7 +96,7 @@ def calcular_movimiento_en_placas_horizontales(velocidad_inicial, velocidad_vert
     El electron ya tiene velocidad vertical de las placas anteriores.
     """
     # Tiempo que el electron pasa entre las placas horizontales
-    tiempo_en_placas = ANCHO_PLACAS_HORIZONTALES / velocidad_inicial
+    tiempo_en_placas = crt_parameters.ANCHO_PLACAS_HORIZONTALES / velocidad_inicial
     
     # Campo electrico y aceleracion horizontal
     campo_horizontal = calcular_campo_electrico_horizontal(voltaje_horizontal)
@@ -124,7 +124,7 @@ def calcular_movimiento_libre_hasta_pantalla(velocidad_inicial, velocidad_vertic
     Movimiento rectilineo uniforme (no hay mas campos electricos).
     """
     # Tiempo de vuelo libre hasta la pantalla
-    tiempo_vuelo_libre = DISTANCIA_PLACAS_HORIZONTALES_A_PANTALLA / velocidad_inicial
+    tiempo_vuelo_libre = crt_parameters.DISTANCIA_PLACAS_HORIZONTALES_A_PANTALLA / velocidad_inicial
     
     # Deflexion adicional durante el vuelo libre
     deflexion_vertical_libre = velocidad_vertical * tiempo_vuelo_libre
@@ -154,7 +154,7 @@ def calcular_posicion_final_electron(voltaje_aceleracion, voltaje_vertical, volt
         velocidad_vertical = resultado_vertical['velocidad_vertical']
         
         # Paso 3: Movimiento entre placas verticales y horizontales (vuelo libre)
-        tiempo_entre_placas = DISTANCIA_PLACAS_VERTICALES_A_HORIZONTALES / velocidad_inicial
+        tiempo_entre_placas = crt_parameters.DISTANCIA_PLACAS_VERTICALES_A_HORIZONTALES / velocidad_inicial
         deflexion_y_entre_placas = velocidad_vertical * tiempo_entre_placas
         
         # Paso 4: Movimiento en placas horizontales
@@ -177,8 +177,8 @@ def calcular_posicion_final_electron(voltaje_aceleracion, voltaje_vertical, volt
                            deflexion_y_placas_horizontales + deflexion_y_libre)
         
         # Verificar si el electron impacta dentro de la pantalla
-        dentro_pantalla_x = abs(posicion_x_final) <= ANCHO_PANTALLA / 2
-        dentro_pantalla_y = abs(posicion_y_final) <= ALTO_PANTALLA / 2
+        dentro_pantalla_x = abs(posicion_x_final) <= crt_parameters.ANCHO_PANTALLA / 2
+        dentro_pantalla_y = abs(posicion_y_final) <= crt_parameters.ALTO_PANTALLA / 2
         dentro_pantalla = dentro_pantalla_x and dentro_pantalla_y
         
         return {
@@ -216,7 +216,7 @@ def generar_trayectoria_completa(voltaje_aceleracion, voltaje_vertical, voltaje_
         # Generar puntos en cada seccion del CRT
         # Seccion 1: Desde el cañon hasta las placas verticales
         for i in range(num_puntos // 4):
-            t = i * (DISTANCIA_CANON_A_PLACAS_VERTICALES / velocidad_inicial) / (num_puntos // 4)
+            t = i * (crt_parameters.DISTANCIA_CANON_A_PLACAS_VERTICALES / velocidad_inicial) / (num_puntos // 4)
             x = velocidad_inicial * t
             y = 0
             z = 0
@@ -227,7 +227,7 @@ def generar_trayectoria_completa(voltaje_aceleracion, voltaje_vertical, voltaje_
         resultado_final = calcular_posicion_final_electron(voltaje_aceleracion, voltaje_vertical, voltaje_horizontal)
         
         trayectoria.append({
-            'x': DISTANCIA_TOTAL_CANON_A_PANTALLA,
+            'x': crt_parameters.DISTANCIA_TOTAL_CANON_A_PANTALLA,
             'y': resultado_final['posicion_y'],
             'z': resultado_final['posicion_x'],
             'seccion': 'pantalla'

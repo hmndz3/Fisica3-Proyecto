@@ -10,9 +10,9 @@ import time
 import math
 
 # Importar nuestros modulos de calculos fisicos
-from crt_parameters import *
-from electron_motion import *
-from lissajous_generator import *
+import crt_parameters
+import electron_motion
+import lissajous_generator
 
 #-------------------------------------------------------------------------------------
 # CONFIGURACION DE LA APLICACION FLASK
@@ -29,14 +29,14 @@ app.config['SECRET_KEY'] = 'crt_simulator_2025'
 #-------------------------------------------------------------------------------------
 # Estado actual de los voltajes (modo manual)
 estado_voltajes = {
-    'voltaje_aceleracion': VOLTAJE_ACELERACION_DEFAULT,
-    'voltaje_vertical': VOLTAJE_VERTICAL_DEFAULT,
-    'voltaje_horizontal': VOLTAJE_HORIZONTAL_DEFAULT,
-    'tiempo_persistencia': TIEMPO_PERSISTENCIA_DEFAULT
+    'voltaje_aceleracion': crt_parameters.VOLTAJE_ACELERACION_DEFAULT,
+    'voltaje_vertical': crt_parameters.VOLTAJE_VERTICAL_DEFAULT,
+    'voltaje_horizontal': crt_parameters.VOLTAJE_HORIZONTAL_DEFAULT,
+    'tiempo_persistencia': crt_parameters.TIEMPO_PERSISTENCIA_DEFAULT
 }
 
 # Estado actual de Lissajous (modo automatico)
-estado_lissajous = obtener_configuracion_default_lissajous()
+estado_lissajous = lissajous_generator.obtener_configuracion_default_lissajous()
 
 # Modo de operacion: 'manual' o 'lissajous'
 modo_operacion = 'manual'
@@ -59,7 +59,7 @@ def index():
 def obtener_parametros_sistema_api():
     """Devuelve todos los parametros fijos del sistema CRT."""
     try:
-        parametros = obtener_parametros_sistema()
+        parametros = crt_parameters.obtener_parametros_sistema()
         return jsonify({
             'success': True,
             'data': parametros
@@ -74,7 +74,7 @@ def obtener_parametros_sistema_api():
 def obtener_info_lissajous_api():
     """Devuelve informacion sobre parametros de Lissajous."""
     try:
-        info = obtener_info_lissajous()
+        info = lissajous_generator.obtener_info_lissajous()
         return jsonify({
             'success': True,
             'data': info
@@ -102,7 +102,7 @@ def actualizar_voltajes_api():
         # Validar y actualizar voltaje de aceleracion
         if 'voltaje_aceleracion' in datos:
             voltaje = float(datos['voltaje_aceleracion'])
-            if validar_voltaje_aceleracion(voltaje):
+            if crt_parameters.validar_voltaje_aceleracion(voltaje):
                 estado_voltajes['voltaje_aceleracion'] = voltaje
             else:
                 return jsonify({
@@ -113,7 +113,7 @@ def actualizar_voltajes_api():
         # Validar y actualizar voltaje vertical
         if 'voltaje_vertical' in datos:
             voltaje = float(datos['voltaje_vertical'])
-            if validar_voltaje_vertical(voltaje):
+            if crt_parameters.validar_voltaje_vertical(voltaje):
                 estado_voltajes['voltaje_vertical'] = voltaje
             else:
                 return jsonify({
@@ -124,7 +124,7 @@ def actualizar_voltajes_api():
         # Validar y actualizar voltaje horizontal
         if 'voltaje_horizontal' in datos:
             voltaje = float(datos['voltaje_horizontal'])
-            if validar_voltaje_horizontal(voltaje):
+            if crt_parameters.validar_voltaje_horizontal(voltaje):
                 estado_voltajes['voltaje_horizontal'] = voltaje
             else:
                 return jsonify({
@@ -135,7 +135,7 @@ def actualizar_voltajes_api():
         # Validar y actualizar tiempo de persistencia
         if 'tiempo_persistencia' in datos:
             tiempo = float(datos['tiempo_persistencia'])
-            if validar_tiempo_persistencia(tiempo):
+            if crt_parameters.validar_tiempo_persistencia(tiempo):
                 estado_voltajes['tiempo_persistencia'] = tiempo
             else:
                 return jsonify({
@@ -167,7 +167,7 @@ def calcular_posicion_api():
         voltaje_horizontal = datos.get('voltaje_horizontal', estado_voltajes['voltaje_horizontal'])
         
         # Calcular posicion final
-        resultado = calcular_posicion_final_electron(
+        resultado = electron_motion.calcular_posicion_final_electron(
             voltaje_aceleracion, voltaje_vertical, voltaje_horizontal
         )
         
@@ -205,7 +205,7 @@ def configurar_lissajous_api():
         tiempo_inicio_animacion = time.time()
         
         # Actualizar configuracion de Lissajous
-        estado_lissajous = actualizar_parametros_lissajous(estado_lissajous, datos)
+        estado_lissajous = lissajous_generator.actualizar_parametros_lissajous(estado_lissajous, datos)
         
         return jsonify({
             'success': True,
@@ -235,7 +235,7 @@ def aplicar_preset_lissajous_api():
             }), 400
         
         # Obtener presets disponibles
-        presets = obtener_presets_lissajous()
+        presets = lissajous_generator.obtener_presets_lissajous()
         
         if nombre_preset not in presets:
             return jsonify({
@@ -289,7 +289,7 @@ def obtener_voltajes_lissajous_tiempo_real():
         tiempo_actual = time.time() - tiempo_inicio_animacion
         
         # Generar voltajes para este momento
-        voltajes = generar_voltajes_lissajous(tiempo_actual, estado_lissajous)
+        voltajes = lissajous_generator.generar_voltajes_lissajous(tiempo_actual, estado_lissajous)
         
         if 'error' in voltajes:
             return jsonify({
@@ -298,7 +298,7 @@ def obtener_voltajes_lissajous_tiempo_real():
             }), 500
         
         # Calcular posicion del electron con estos voltajes
-        posicion = calcular_posicion_final_electron(
+        posicion = electron_motion.calcular_posicion_final_electron(
             estado_voltajes['voltaje_aceleracion'],
             voltajes['voltaje_vertical'],
             voltajes['voltaje_horizontal']
