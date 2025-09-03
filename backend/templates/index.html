@@ -555,7 +555,8 @@
             animacionActiva: false,
             intervalos: {
                 lissajous: null,
-                actualizacion: null
+                actualizacion: null,
+                vistas: null  // Nuevo intervalo para las vistas laterales
             },
             parametrosLissajous: {
                 frecuencia_vertical: 1.0,
@@ -565,7 +566,8 @@
                 fase_horizontal: 0.0,
                 amplitud_horizontal: 100
             },
-            tiempoInicioAnimacion: Date.now()
+            tiempoInicioAnimacion: Date.now(),
+            ultimoResultado: null  // Para almacenar el último resultado de cálculo
         };
 
         // Referencias a elementos del DOM
@@ -632,6 +634,7 @@
             inicializarEventListeners();
             inicializarCanvas();
             actualizarInterfaz();
+            iniciarAnimacionVistas(); // Nueva función para animar siempre las vistas
             
             console.log('✅ Simulador CRT iniciado correctamente');
         });
@@ -694,6 +697,26 @@
             dibujarEstructuraCRT();
             
             console.log('✅ Canvas inicializados');
+        }
+
+        //-------------------------------------------------------------------------------------
+        // NUEVA FUNCION PARA ANIMAR SIEMPRE LAS VISTAS
+        //-------------------------------------------------------------------------------------
+        function iniciarAnimacionVistas() {
+            // Limpiar intervalo anterior si existe
+            if (estadoActual.intervalos.vistas) {
+                clearInterval(estadoActual.intervalos.vistas);
+            }
+            
+            // Iniciar animación a 30 FPS para las vistas laterales
+            estadoActual.intervalos.vistas = setInterval(() => {
+                if (estadoActual.ultimoResultado) {
+                    actualizarVistaLateral(estadoActual.ultimoResultado);
+                    actualizarVistaSuperior(estadoActual.ultimoResultado);
+                }
+            }, 1000 / 30); // 30 FPS
+            
+            console.log('✅ Animación de vistas iniciada');
         }
 
         //-------------------------------------------------------------------------------------
@@ -886,7 +909,10 @@
                 dentro_pantalla: dentropantalla,
                 velocidad_inicial: velocidadInicial,
                 velocidad_final_x: velocidadHorizontal,
-                velocidad_final_y: velocidadVertical
+                velocidad_final_y: velocidadVertical,
+                // Agregar voltajes actuales para las vistas
+                voltaje_vertical_actual: voltajeVertical,
+                voltaje_horizontal_actual: voltajeHorizontal
             };
         }
 
@@ -905,8 +931,11 @@
                 voltajes.voltaje_horizontal
             );
             
-            // Actualizar visualización
-            actualizarVisualizacion(resultado);
+            // Almacenar resultado para las vistas animadas
+            estadoActual.ultimoResultado = resultado;
+            
+            // Actualizar visualización principal
+            actualizarPantallaPrincipal(resultado);
             actualizarInfoPanel(resultado);
         }
 
@@ -945,6 +974,9 @@
                     voltajes.voltaje_vertical,
                     voltajes.voltaje_horizontal
                 );
+                
+                // Almacenar resultado para las vistas animadas
+                estadoActual.ultimoResultado = resultado;
                 
                 // Actualizar visualización Lissajous
                 actualizarVisualizacionLissajous(resultado, voltajes);
@@ -1111,7 +1143,7 @@
             dibujarVistaLateral();
             
             if (resultado.dentro_pantalla) {
-                // Dibujar trayectoria del haz de electrones
+                // Dibujar trayectoria del haz de electrones con animación suave
                 ctx.strokeStyle = '#00ff41';
                 ctx.lineWidth = 3;
                 ctx.shadowColor = '#00ff41';
@@ -1119,6 +1151,12 @@
                 
                 const width = elementos.canvasLateral.width;
                 const height = elementos.canvasLateral.height;
+                
+                // Agregar efecto de tiempo para animación suave
+                const tiempo = Date.now() / 1000;
+                const intensidad = 0.8 + 0.2 * Math.sin(tiempo * 5); // Pulsación suave
+                
+                ctx.globalAlpha = intensidad;
                 
                 ctx.beginPath();
                 // Desde el cañón
@@ -1131,13 +1169,15 @@
                 ctx.lineTo(width - 40, height/2 + deflexionY * 1.5);
                 ctx.stroke();
                 
-                // Punto de impacto
+                // Punto de impacto con pulsación
                 ctx.fillStyle = '#00ff41';
                 ctx.shadowBlur = 20;
                 ctx.beginPath();
-                ctx.arc(width - 40, height/2 + deflexionY * 1.5, 5, 0, 2 * Math.PI);
+                const radio = 3 + 2 * Math.sin(tiempo * 8); // Radio pulsante
+                ctx.arc(width - 40, height/2 + deflexionY * 1.5, radio, 0, 2 * Math.PI);
                 ctx.fill();
                 
+                ctx.globalAlpha = 1.0;
                 ctx.shadowBlur = 0;
             }
         }
@@ -1149,7 +1189,7 @@
             dibujarVistaSuperior();
             
             if (resultado.dentro_pantalla) {
-                // Dibujar trayectoria del haz de electrones
+                // Dibujar trayectoria del haz de electrones con animación suave
                 ctx.strokeStyle = '#00ff41';
                 ctx.lineWidth = 3;
                 ctx.shadowColor = '#00ff41';
@@ -1157,6 +1197,12 @@
                 
                 const width = elementos.canvasSuperior.width;
                 const height = elementos.canvasSuperior.height;
+                
+                // Agregar efecto de tiempo para animación suave
+                const tiempo = Date.now() / 1000;
+                const intensidad = 0.8 + 0.2 * Math.sin(tiempo * 5); // Pulsación suave
+                
+                ctx.globalAlpha = intensidad;
                 
                 ctx.beginPath();
                 // Desde el cañón
@@ -1170,13 +1216,15 @@
                 ctx.lineTo(width - 40, height/2 + deflexionX * 1.5);
                 ctx.stroke();
                 
-                // Punto de impacto
+                // Punto de impacto con pulsación
                 ctx.fillStyle = '#00ff41';
                 ctx.shadowBlur = 20;
                 ctx.beginPath();
-                ctx.arc(width - 40, height/2 + deflexionX * 1.5, 5, 0, 2 * Math.PI);
+                const radio = 3 + 2 * Math.sin(tiempo * 8); // Radio pulsante
+                ctx.arc(width - 40, height/2 + deflexionX * 1.5, radio, 0, 2 * Math.PI);
                 ctx.fill();
                 
+                ctx.globalAlpha = 1.0;
                 ctx.shadowBlur = 0;
             }
         }
@@ -1286,7 +1334,7 @@
         }
 
         //-------------------------------------------------------------------------------------
-        // FUNCIONES PARA CONTROL DE LISSAJOUS
+        // FUNCIONES PARA CONTROL DE LISSAJOUS CON CORRECCIONES DE FASE
         //-------------------------------------------------------------------------------------
         function aplicarPresetLissajous() {
             const presetSeleccionado = elementos.presetSelector.value;
@@ -1296,14 +1344,14 @@
                 return;
             }
             
-            // Presets predefinidos
+            // Presets predefinidos CORREGIDOS
             const presets = {
                 'circulo': {
                     frecuencia_vertical: 1.0,
                     fase_vertical: 0,
                     amplitud_vertical: 100,
                     frecuencia_horizontal: 1.0,
-                    fase_horizontal: 90,
+                    fase_horizontal: 90, // 90° para círculo perfecto
                     amplitud_horizontal: 100
                 },
                 'linea_diagonal': {
@@ -1311,7 +1359,7 @@
                     fase_vertical: 0,
                     amplitud_vertical: 100,
                     frecuencia_horizontal: 1.0,
-                    fase_horizontal: 0,
+                    fase_horizontal: 0, // 0° para línea diagonal
                     amplitud_horizontal: 100
                 },
                 'elipse': {
@@ -1319,7 +1367,7 @@
                     fase_vertical: 0,
                     amplitud_vertical: 100,
                     frecuencia_horizontal: 1.0,
-                    fase_horizontal: 45,
+                    fase_horizontal: 60, // 60° para elipse
                     amplitud_horizontal: 100
                 },
                 'ocho': {
@@ -1327,7 +1375,7 @@
                     fase_vertical: 0,
                     amplitud_vertical: 100,
                     frecuencia_horizontal: 1.0,
-                    fase_horizontal: 0,
+                    fase_horizontal: 90, // 90° para figura 8 correcta
                     amplitud_horizontal: 100
                 },
                 'trebol': {
@@ -1335,7 +1383,7 @@
                     fase_vertical: 0,
                     amplitud_vertical: 100,
                     frecuencia_horizontal: 1.0,
-                    fase_horizontal: 0,
+                    fase_horizontal: 0, // 0° para trébol
                     amplitud_horizontal: 100
                 },
                 'mariposa': {
@@ -1343,7 +1391,7 @@
                     fase_vertical: 0,
                     amplitud_vertical: 100,
                     frecuencia_horizontal: 2.0,
-                    fase_horizontal: 30,
+                    fase_horizontal: 45, // 45° para mariposa
                     amplitud_horizontal: 100
                 }
             };
@@ -1429,12 +1477,26 @@
             elementos.infoPanel.classList.remove('visible');
         });
 
+        // Limpiar todos los intervalos al cerrar la página
+        window.addEventListener('beforeunload', () => {
+            if (estadoActual.intervalos.lissajous) {
+                clearInterval(estadoActual.intervalos.lissajous);
+            }
+            if (estadoActual.intervalos.vistas) {
+                clearInterval(estadoActual.intervalos.vistas);
+            }
+            if (estadoActual.intervalos.actualizacion) {
+                clearInterval(estadoActual.intervalos.actualizacion);
+            }
+        });
+
         // Debugging en consola
         window.simuladorCRT = {
             estado: () => estadoActual,
             reiniciar: () => location.reload(),
             cambiarModo: cambiarModo,
-            parametros: () => estadoActual.parametrosLissajous
+            parametros: () => estadoActual.parametrosLissajous,
+            ultimoResultado: () => estadoActual.ultimoResultado
         };
 
         console.log('🔧 Herramientas de debug disponibles en window.simuladorCRT');
