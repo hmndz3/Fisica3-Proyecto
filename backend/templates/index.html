@@ -1,0 +1,1255 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador CRT - Tubo de Rayos Catódicos</title>
+    <style>
+        /*-------------------------------------------------------------------------------------*/
+        /* ESTILOS GENERALES - TEMA CIENTIFICO ESTILO LABORATORIO */
+        /*-------------------------------------------------------------------------------------*/
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Consolas', 'Monaco', monospace;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            color: #00ff41;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            grid-template-rows: 60px 1fr;
+            height: 100vh;
+            gap: 10px;
+            padding: 10px;
+        }
+
+        /*-------------------------------------------------------------------------------------*/
+        /* HEADER - TITULO Y CONTROLES GENERALES */
+        /*-------------------------------------------------------------------------------------*/
+        .header {
+            grid-column: 1 / -1;
+            background: rgba(0, 255, 65, 0.1);
+            border: 2px solid #00ff41;
+            border-radius: 10px;
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            backdrop-filter: blur(10px);
+        }
+
+        .header h1 {
+            font-size: 24px;
+            text-shadow: 0 0 10px #00ff41;
+            letter-spacing: 2px;
+        }
+
+        .modo-selector {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .btn-modo {
+            padding: 8px 16px;
+            background: transparent;
+            color: #00ff41;
+            border: 2px solid #00ff41;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        .btn-modo:hover {
+            background: rgba(0, 255, 65, 0.2);
+            box-shadow: 0 0 15px rgba(0, 255, 65, 0.5);
+        }
+
+        .btn-modo.activo {
+            background: #00ff41;
+            color: #1a1a2e;
+            box-shadow: 0 0 20px rgba(0, 255, 65, 0.8);
+        }
+
+        /*-------------------------------------------------------------------------------------*/
+        /* PANEL DE CONTROL LATERAL */
+        /*-------------------------------------------------------------------------------------*/
+        .panel-control {
+            background: rgba(0, 255, 65, 0.05);
+            border: 2px solid #00ff41;
+            border-radius: 10px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            overflow-y: auto;
+        }
+
+        .seccion-control {
+            margin-bottom: 25px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            border-left: 4px solid #00ff41;
+        }
+
+        .seccion-control h3 {
+            margin-bottom: 15px;
+            color: #00ff41;
+            font-size: 16px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-shadow: 0 0 5px #00ff41;
+        }
+
+        .control-grupo {
+            margin-bottom: 15px;
+        }
+
+        .control-grupo label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 12px;
+            color: #88ff88;
+        }
+
+        .slider {
+            width: 100%;
+            height: 6px;
+            background: #333;
+            border-radius: 3px;
+            outline: none;
+            opacity: 0.7;
+            transition: opacity 0.3s;
+        }
+
+        .slider:hover {
+            opacity: 1;
+        }
+
+        .slider::-webkit-slider-thumb {
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #00ff41;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(0, 255, 65, 0.8);
+        }
+
+        .valor-display {
+            background: rgba(0, 0, 0, 0.5);
+            color: #00ff41;
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-family: monospace;
+            font-size: 14px;
+            margin-top: 5px;
+            border: 1px solid #00ff41;
+            text-align: center;
+        }
+
+        .preset-selector {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            color: #00ff41;
+            border: 2px solid #00ff41;
+            padding: 8px;
+            border-radius: 5px;
+            font-family: inherit;
+        }
+
+        .preset-selector option {
+            background: #1a1a2e;
+            color: #00ff41;
+        }
+
+        /*-------------------------------------------------------------------------------------*/
+        /* AREA DE VISUALIZACION PRINCIPAL */
+        /*-------------------------------------------------------------------------------------*/
+        .area-visualizacion {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 10px;
+            background: rgba(0, 255, 65, 0.05);
+            border: 2px solid #00ff41;
+            border-radius: 10px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .vista {
+            background: rgba(0, 0, 0, 0.7);
+            border: 2px solid #00ff41;
+            border-radius: 8px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .vista-header {
+            background: rgba(0, 255, 65, 0.2);
+            padding: 8px 15px;
+            border-bottom: 1px solid #00ff41;
+            font-weight: bold;
+            text-align: center;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .vista-canvas {
+            flex: 1;
+            background: #000;
+            position: relative;
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%;
+            border-radius: 0 0 6px 6px;
+        }
+
+        .pantalla-principal {
+            grid-column: 1 / -1;
+            grid-row: 2;
+        }
+
+        .pantalla-principal canvas {
+            background: radial-gradient(circle at center, #001100 0%, #000000 100%);
+        }
+
+        /*-------------------------------------------------------------------------------------*/
+        /* EFECTOS VISUALES Y ANIMACIONES */
+        /*-------------------------------------------------------------------------------------*/
+        .electron-dot {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: #00ff41;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #00ff41, 0 0 20px #00ff41, 0 0 30px #00ff41;
+            animation: pulse 1s ease-in-out infinite alternate;
+        }
+
+        @keyframes pulse {
+            from { transform: scale(1); opacity: 1; }
+            to { transform: scale(1.5); opacity: 0.7; }
+        }
+
+        .fade-trail {
+            opacity: 0.8;
+            transition: opacity 2s linear;
+        }
+
+        .fade-trail.fading {
+            opacity: 0;
+        }
+
+        /*-------------------------------------------------------------------------------------*/
+        /* PANEL DE INFORMACION */
+        /*-------------------------------------------------------------------------------------*/
+        .info-panel {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            width: 250px;
+            background: rgba(0, 0, 0, 0.9);
+            border: 2px solid #00ff41;
+            border-radius: 10px;
+            padding: 15px;
+            backdrop-filter: blur(10px);
+            display: none;
+        }
+
+        .info-panel.visible {
+            display: block;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 12px;
+        }
+
+        .info-label {
+            color: #88ff88;
+        }
+
+        .info-value {
+            color: #00ff41;
+            font-family: monospace;
+        }
+
+        /*-------------------------------------------------------------------------------------*/
+        /* CONTROLES RESPONSIVOS */
+        /*-------------------------------------------------------------------------------------*/
+        @media (max-width: 1200px) {
+            .container {
+                grid-template-columns: 250px 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto auto 1fr;
+            }
+            
+            .panel-control {
+                max-height: 200px;
+            }
+            
+            .area-visualizacion {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto auto 1fr;
+            }
+        }
+
+        /*-------------------------------------------------------------------------------------*/
+        /* BOTONES Y CONTROLES ADICIONALES */
+        /*-------------------------------------------------------------------------------------*/
+        .btn-accion {
+            background: transparent;
+            color: #00ff41;
+            border: 2px solid #00ff41;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 12px;
+            transition: all 0.3s ease;
+            margin: 5px 0;
+            width: 100%;
+        }
+
+        .btn-accion:hover {
+            background: rgba(0, 255, 65, 0.2);
+            box-shadow: 0 0 15px rgba(0, 255, 65, 0.5);
+        }
+
+        .btn-accion:active {
+            transform: scale(0.98);
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 8px;
+            background: #ff0000;
+            box-shadow: 0 0 5px #ff0000;
+        }
+
+        .status-indicator.activo {
+            background: #00ff41;
+            box-shadow: 0 0 5px #00ff41;
+            animation: pulse 2s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header con título y controles principales -->
+        <header class="header">
+            <h1>🔬 SIMULADOR CRT</h1>
+            <div class="modo-selector">
+                <button class="btn-modo activo" id="btn-modo-manual">Manual</button>
+                <button class="btn-modo" id="btn-modo-lissajous">Lissajous</button>
+                <span class="status-indicator activo" id="status-conexion"></span>
+                <span id="status-texto">Conectado</span>
+            </div>
+        </header>
+
+        <!-- Panel de control lateral -->
+        <aside class="panel-control">
+            <!-- Controles para modo manual -->
+            <div id="controles-manual" class="modo-controles">
+                <div class="seccion-control">
+                    <h3>⚡ Voltaje de Aceleración</h3>
+                    <div class="control-grupo">
+                        <label for="voltaje-aceleracion">Voltaje (V)</label>
+                        <input type="range" id="voltaje-aceleracion" class="slider" 
+                               min="500" max="5000" value="2000" step="50">
+                        <div class="valor-display" id="display-aceleracion">2000 V</div>
+                    </div>
+                </div>
+
+                <div class="seccion-control">
+                    <h3>📏 Deflexión Vertical</h3>
+                    <div class="control-grupo">
+                        <label for="voltaje-vertical">Voltaje Vertical (V)</label>
+                        <input type="range" id="voltaje-vertical" class="slider" 
+                               min="-200" max="200" value="0" step="5">
+                        <div class="valor-display" id="display-vertical">0 V</div>
+                    </div>
+                </div>
+
+                <div class="seccion-control">
+                    <h3>📐 Deflexión Horizontal</h3>
+                    <div class="control-grupo">
+                        <label for="voltaje-horizontal">Voltaje Horizontal (V)</label>
+                        <input type="range" id="voltaje-horizontal" class="slider" 
+                               min="-200" max="200" value="0" step="5">
+                        <div class="valor-display" id="display-horizontal">0 V</div>
+                    </div>
+                </div>
+
+                <div class="seccion-control">
+                    <h3>⏱️ Persistencia</h3>
+                    <div class="control-grupo">
+                        <label for="tiempo-persistencia">Tiempo (s)</label>
+                        <input type="range" id="tiempo-persistencia" class="slider" 
+                               min="0.1" max="5.0" value="1.0" step="0.1">
+                        <div class="valor-display" id="display-persistencia">1.0 s</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Controles para modo Lissajous -->
+            <div id="controles-lissajous" class="modo-controles" style="display: none;">
+                <div class="seccion-control">
+                    <h3>🎯 Presets Lissajous</h3>
+                    <div class="control-grupo">
+                        <select id="preset-selector" class="preset-selector">
+                            <option value="">Seleccionar Preset...</option>
+                            <option value="circulo">Círculo</option>
+                            <option value="linea_diagonal">Línea Diagonal</option>
+                            <option value="elipse">Elipse</option>
+                            <option value="ocho">Figura en 8</option>
+                            <option value="trebol">Trébol</option>
+                            <option value="mariposa">Mariposa</option>
+                        </select>
+                        <button class="btn-accion" id="btn-aplicar-preset">Aplicar Preset</button>
+                    </div>
+                </div>
+
+                <div class="seccion-control">
+                    <h3>📊 Señal Vertical</h3>
+                    <div class="control-grupo">
+                        <label for="freq-vertical">Frecuencia (Hz)</label>
+                        <input type="range" id="freq-vertical" class="slider" 
+                               min="0.1" max="10.0" value="1.0" step="0.1">
+                        <div class="valor-display" id="display-freq-vertical">1.0 Hz</div>
+                    </div>
+                    <div class="control-grupo">
+                        <label for="fase-vertical">Fase (°)</label>
+                        <input type="range" id="fase-vertical" class="slider" 
+                               min="0" max="360" value="0" step="5">
+                        <div class="valor-display" id="display-fase-vertical">0°</div>
+                    </div>
+                    <div class="control-grupo">
+                        <label for="amp-vertical">Amplitud (V)</label>
+                        <input type="range" id="amp-vertical" class="slider" 
+                               min="10" max="200" value="100" step="10">
+                        <div class="valor-display" id="display-amp-vertical">100 V</div>
+                    </div>
+                </div>
+
+                <div class="seccion-control">
+                    <h3>📈 Señal Horizontal</h3>
+                    <div class="control-grupo">
+                        <label for="freq-horizontal">Frecuencia (Hz)</label>
+                        <input type="range" id="freq-horizontal" class="slider" 
+                               min="0.1" max="10.0" value="1.0" step="0.1">
+                        <div class="valor-display" id="display-freq-horizontal">1.0 Hz</div>
+                    </div>
+                    <div class="control-grupo">
+                        <label for="fase-horizontal">Fase (°)</label>
+                        <input type="range" id="fase-horizontal" class="slider" 
+                               min="0" max="360" value="0" step="5">
+                        <div class="valor-display" id="display-fase-horizontal">0°</div>
+                    </div>
+                    <div class="control-grupo">
+                        <label for="amp-horizontal">Amplitud (V)</label>
+                        <input type="range" id="amp-horizontal" class="slider" 
+                               min="10" max="200" value="100" step="10">
+                        <div class="valor-display" id="display-amp-horizontal">100 V</div>
+                    </div>
+                </div>
+
+                <div class="seccion-control">
+                    <h3>🔄 Control de Animación</h3>
+                    <button class="btn-accion" id="btn-reiniciar-animacion">Reiniciar</button>
+                    <button class="btn-accion" id="btn-pausar-animacion">Pausar</button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Área principal de visualización -->
+        <main class="area-visualizacion">
+            <div class="vista">
+                <div class="vista-header">Vista Lateral - Deflexión Vertical</div>
+                <div class="vista-canvas">
+                    <canvas id="canvas-lateral" width="400" height="300"></canvas>
+                </div>
+            </div>
+
+            <div class="vista">
+                <div class="vista-header">Vista Superior - Deflexión Horizontal</div>
+                <div class="vista-canvas">
+                    <canvas id="canvas-superior" width="400" height="300"></canvas>
+                </div>
+            </div>
+
+            <div class="vista pantalla-principal">
+                <div class="vista-header">🖥️ Pantalla del CRT - Vista Frontal</div>
+                <div class="vista-canvas">
+                    <canvas id="canvas-pantalla" width="600" height="400"></canvas>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Panel de información (opcional, se muestra al hacer hover) -->
+    <div class="info-panel" id="info-panel">
+        <h4 style="margin-bottom: 10px; color: #00ff41;">Información del Sistema</h4>
+        <div class="info-item">
+            <span class="info-label">Posición X:</span>
+            <span class="info-value" id="info-pos-x">0.000 m</span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">Posición Y:</span>
+            <span class="info-value" id="info-pos-y">0.000 m</span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">Velocidad:</span>
+            <span class="info-value" id="info-velocidad">0.000 m/s</span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">En pantalla:</span>
+            <span class="info-value" id="info-en-pantalla">Sí</span>
+        </div>
+    </div>
+
+    <!-- Scripts de JavaScript -->
+    <script>
+        //-------------------------------------------------------------------------------------
+        // VARIABLES GLOBALES PARA LA APLICACION
+        //-------------------------------------------------------------------------------------
+        const API_BASE_URL = window.location.origin + '/api';
+        
+        // Estado actual del simulador
+        let estadoActual = {
+            modo: 'manual',
+            animacionActiva: false,
+            intervalos: {
+                lissajous: null,
+                actualizacion: null
+            }
+        };
+
+        // Referencias a elementos del DOM
+        const elementos = {
+            // Botones de modo
+            btnModoManual: document.getElementById('btn-modo-manual'),
+            btnModoLissajous: document.getElementById('btn-modo-lissajous'),
+            
+            // Controles
+            controlesManual: document.getElementById('controles-manual'),
+            controlesLissajous: document.getElementById('controles-lissajous'),
+            
+            // Canvas
+            canvasLateral: document.getElementById('canvas-lateral'),
+            canvasSuperior: document.getElementById('canvas-superior'),
+            canvasPantalla: document.getElementById('canvas-pantalla'),
+            
+            // Sliders modo manual
+            voltajeAceleracion: document.getElementById('voltaje-aceleracion'),
+            voltajeVertical: document.getElementById('voltaje-vertical'),
+            voltajeHorizontal: document.getElementById('voltaje-horizontal'),
+            tiempoPersistencia: document.getElementById('tiempo-persistencia'),
+            
+            // Displays de valores
+            displayAceleracion: document.getElementById('display-aceleracion'),
+            displayVertical: document.getElementById('display-vertical'),
+            displayHorizontal: document.getElementById('display-horizontal'),
+            displayPersistencia: document.getElementById('display-persistencia'),
+            
+            // Controles Lissajous
+            presetSelector: document.getElementById('preset-selector'),
+            btnAplicarPreset: document.getElementById('btn-aplicar-preset'),
+            btnReiniciarAnimacion: document.getElementById('btn-reiniciar-animacion'),
+            btnPausarAnimacion: document.getElementById('btn-pausar-animacion'),
+            
+            // Panel de información
+            infoPanel: document.getElementById('info-panel'),
+            statusConexion: document.getElementById('status-conexion'),
+            statusTexto: document.getElementById('status-texto')
+        };
+
+        //-------------------------------------------------------------------------------------
+        // INICIALIZACION DE LA APLICACION
+        //-------------------------------------------------------------------------------------
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Iniciando simulador CRT frontend...');
+            
+            inicializarEventListeners();
+            inicializarCanvas();
+            cargarParametrosSistema();
+            actualizarInterfaz();
+            
+            console.log('✅ Simulador CRT iniciado correctamente');
+        });
+
+        //-------------------------------------------------------------------------------------
+        // FUNCIONES DE INICIALIZACION
+        //-------------------------------------------------------------------------------------
+        function inicializarEventListeners() {
+            // Botones de cambio de modo
+            elementos.btnModoManual.addEventListener('click', () => cambiarModo('manual'));
+            elementos.btnModoLissajous.addEventListener('click', () => cambiarModo('lissajous'));
+            
+            // Sliders modo manual
+            elementos.voltajeAceleracion.addEventListener('input', actualizarValorDisplay);
+            elementos.voltajeVertical.addEventListener('input', actualizarValorDisplay);
+            elementos.voltajeHorizontal.addEventListener('input', actualizarValorDisplay);
+            elementos.tiempoPersistencia.addEventListener('input', actualizarValorDisplay);
+            
+            // Eventos de cambio para recalcular posición
+            elementos.voltajeAceleracion.addEventListener('change', actualizarSimulacion);
+            elementos.voltajeVertical.addEventListener('change', actualizarSimulacion);
+            elementos.voltajeHorizontal.addEventListener('change', actualizarSimulacion);
+            
+            // Controles Lissajous
+            elementos.btnAplicarPreset.addEventListener('click', aplicarPresetLissajous);
+            elementos.btnReiniciarAnimacion.addEventListener('click', reiniciarAnimacion);
+            elementos.btnPausarAnimacion.addEventListener('click', togglePausarAnimacion);
+            
+            console.log('✅ Event listeners inicializados');
+        }
+
+        function inicializarCanvas() {
+            // Configurar contextos de canvas
+            const ctxLateral = elementos.canvasLateral.getContext('2d');
+            const ctxSuperior = elementos.canvasSuperior.getContext('2d');
+            const ctxPantalla = elementos.canvasPantalla.getContext('2d');
+            
+            // Configuraciones básicas
+            [ctxLateral, ctxSuperior, ctxPantalla].forEach(ctx => {
+                ctx.imageSmoothingEnabled = true;
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+            });
+            
+            // Dibujar estructura inicial del CRT
+            dibujarEstructuraCRT();
+            
+            console.log('✅ Canvas inicializados');
+        }
+
+        //-------------------------------------------------------------------------------------
+        // FUNCIONES DE COMUNICACION CON EL BACKEND
+        //-------------------------------------------------------------------------------------
+        async function realizarPeticionAPI(endpoint, metodo = 'GET', datos = null) {
+            try {
+                const opciones = {
+                    method: metodo,
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                };
+                
+                if (datos && metodo !== 'GET') {
+                    opciones.body = JSON.stringify(datos);
+                }
+                
+                const respuesta = await fetch(API_BASE_URL + endpoint, opciones);
+                const resultado = await respuesta.json();
+                
+                if (!resultado.success) {
+                    throw new Error(resultado.error);
+                }
+                
+                actualizarStatusConexion(true);
+                return resultado.data;
+                
+            } catch (error) {
+                console.error('Error en petición API:', error);
+                actualizarStatusConexion(false, error.message);
+                throw error;
+            }
+        }
+
+        async function cargarParametrosSistema() {
+            try {
+                const parametros = await realizarPeticionAPI('/parametros-sistema');
+                console.log('📊 Parámetros del sistema cargados:', parametros);
+                
+                // Actualizar rangos de sliders basados en parámetros del sistema
+                const rangos = parametros.rangos_voltaje;
+                
+                elementos.voltajeAceleracion.min = rangos.aceleracion.min;
+                elementos.voltajeAceleracion.max = rangos.aceleracion.max;
+                elementos.voltajeAceleracion.value = rangos.aceleracion.default;
+                
+                elementos.voltajeVertical.min = rangos.vertical.min;
+                elementos.voltajeVertical.max = rangos.vertical.max;
+                elementos.voltajeVertical.value = rangos.vertical.default;
+                
+                elementos.voltajeHorizontal.min = rangos.horizontal.min;
+                elementos.voltajeHorizontal.max = rangos.horizontal.max;
+                elementos.voltajeHorizontal.value = rangos.horizontal.default;
+                
+                actualizarValoresDisplay();
+                
+            } catch (error) {
+                console.error('Error cargando parámetros del sistema:', error);
+            }
+        }
+
+        //-------------------------------------------------------------------------------------
+        // FUNCIONES DE INTERFAZ DE USUARIO
+        //-------------------------------------------------------------------------------------
+        function cambiarModo(nuevoModo) {
+            estadoActual.modo = nuevoModo;
+            
+            // Actualizar botones activos
+            elementos.btnModoManual.classList.toggle('activo', nuevoModo === 'manual');
+            elementos.btnModoLissajous.classList.toggle('activo', nuevoModo === 'lissajous');
+            
+            // Mostrar/ocultar controles correspondientes
+            elementos.controlesManual.style.display = nuevoModo === 'manual' ? 'block' : 'none';
+            elementos.controlesLissajous.style.display = nuevoModo === 'lissajous' ? 'block' : 'none';
+            
+            // Limpiar intervalos anteriores
+            if (estadoActual.intervalos.lissajous) {
+                clearInterval(estadoActual.intervalos.lissajous);
+                estadoActual.intervalos.lissajous = null;
+            }
+            
+            // Configurar nuevo modo
+            if (nuevoModo === 'lissajous') {
+                iniciarAnimacionLissajous();
+            } else {
+                actualizarSimulacion();
+            }
+            
+            console.log(`🔄 Modo cambiado a: ${nuevoModo}`);
+        }
+
+        function actualizarValorDisplay(event) {
+            const slider = event.target;
+            const displayId = 'display-' + slider.id.split('-').slice(-1)[0];
+            const display = document.getElementById(displayId);
+            
+            if (display) {
+                let valor = parseFloat(slider.value);
+                let unidad = '';
+                
+                // Determinar unidad según el tipo de control
+                if (slider.id.includes('voltaje') || slider.id.includes('amp')) {
+                    unidad = ' V';
+                } else if (slider.id.includes('tiempo')) {
+                    unidad = ' s';
+                } else if (slider.id.includes('freq')) {
+                    unidad = ' Hz';
+                } else if (slider.id.includes('fase')) {
+                    unidad = '°';
+                }
+                
+                display.textContent = valor.toFixed(slider.step < 1 ? 1 : 0) + unidad;
+            }
+        }
+
+        function actualizarValoresDisplay() {
+            // Actualizar todos los displays de valores
+            const sliders = document.querySelectorAll('.slider');
+            sliders.forEach(slider => {
+                const event = { target: slider };
+                actualizarValorDisplay(event);
+            });
+        }
+
+        function actualizarStatusConexion(conectado, mensaje = '') {
+            elementos.statusConexion.classList.toggle('activo', conectado);
+            elementos.statusTexto.textContent = conectado ? 'Conectado' : 'Error: ' + mensaje;
+        }
+
+        //-------------------------------------------------------------------------------------
+        // FUNCIONES DE SIMULACION Y CALCULO
+        //-------------------------------------------------------------------------------------
+        async function actualizarSimulacion() {
+            if (estadoActual.modo !== 'manual') return;
+            
+            try {
+                const voltajes = {
+                    voltaje_aceleracion: parseFloat(elementos.voltajeAceleracion.value),
+                    voltaje_vertical: parseFloat(elementos.voltajeVertical.value),
+                    voltaje_horizontal: parseFloat(elementos.voltajeHorizontal.value)
+                };
+                
+                const resultado = await realizarPeticionAPI('/calcular-posicion', 'POST', voltajes);
+                
+                // Actualizar visualización
+                actualizarVisualizacion(resultado);
+                actualizarInfoPanel(resultado);
+                
+            } catch (error) {
+                console.error('Error actualizando simulación:', error);
+            }
+        }
+
+        function iniciarAnimacionLissajous() {
+            if (estadoActual.intervalos.lissajous) {
+                clearInterval(estadoActual.intervalos.lissajous);
+            }
+            
+            estadoActual.intervalos.lissajous = setInterval(async () => {
+                try {
+                    const datos = await realizarPeticionAPI('/voltajes-lissajous-tiempo-real');
+                    
+                    if (datos.voltajes && datos.posicion) {
+                        actualizarVisualizacionLissajous(datos);
+                        actualizarInfoPanel(datos.posicion);
+                    }
+                    
+                } catch (error) {
+                    console.error('Error en animación Lissajous:', error);
+                }
+            }, 1000 / 30); // 30 FPS
+            
+            estadoActual.animacionActiva = true;
+            elementos.btnPausarAnimacion.textContent = 'Pausar';
+        }
+
+        //-------------------------------------------------------------------------------------
+        // FUNCIONES DE RENDERIZADO Y VISUALIZACION
+        //-------------------------------------------------------------------------------------
+        function dibujarEstructuraCRT() {
+            // Dibujar la estructura básica del CRT en cada vista
+            dibujarVistaLateral();
+            dibujarVistaSuperior();
+            limpiarPantalla();
+        }
+
+        function dibujarVistaLateral() {
+            const ctx = elementos.canvasLateral.getContext('2d');
+            const width = elementos.canvasLateral.width;
+            const height = elementos.canvasLateral.height;
+            
+            ctx.clearRect(0, 0, width, height);
+            
+            // Configurar estilo
+            ctx.strokeStyle = '#00ff41';
+            ctx.lineWidth = 2;
+            ctx.fillStyle = 'rgba(0, 255, 65, 0.1)';
+            
+            // Dibujar cañón de electrones
+            ctx.fillRect(20, height/2 - 10, 30, 20);
+            ctx.strokeRect(20, height/2 - 10, 30, 20);
+            
+            // Dibujar placas de deflexión vertical
+            const placasX = 120;
+            const placasY = height/2;
+            const placasAncho = 40;
+            const placasAlto = 8;
+            const separacion = 30;
+            
+            // Placa superior
+            ctx.fillRect(placasX, placasY - separacion/2 - placasAlto, placasAncho, placasAlto);
+            ctx.strokeRect(placasX, placasY - separacion/2 - placasAlto, placasAncho, placasAlto);
+            
+            // Placa inferior
+            ctx.fillRect(placasX, placasY + separacion/2, placasAncho, placasAlto);
+            ctx.strokeRect(placasX, placasY + separacion/2, placasAncho, placasAlto);
+            
+            // Dibujar pantalla
+            ctx.fillRect(width - 40, 20, 20, height - 40);
+            ctx.strokeRect(width - 40, 20, 20, height - 40);
+            
+            // Etiquetas
+            ctx.fillStyle = '#00ff41';
+            ctx.font = '12px monospace';
+            ctx.fillText('Cañón', 15, height/2 - 15);
+            ctx.fillText('Placas H', 180, height/2 - 50);
+            ctx.fillText('Pantalla', width - 80, 15);
+        }
+
+        function limpiarPantalla() {
+            const ctx = elementos.canvasPantalla.getContext('2d');
+            const width = elementos.canvasPantalla.width;
+            const height = elementos.canvasPantalla.height;
+            
+            // Limpiar con efecto de fade
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+            ctx.fillRect(0, 0, width, height);
+            
+            // Dibujar grid de fondo
+            ctx.strokeStyle = 'rgba(0, 255, 65, 0.1)';
+            ctx.lineWidth = 1;
+            
+            // Líneas verticales
+            for (let x = 0; x < width; x += 20) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, height);
+                ctx.stroke();
+            }
+            
+            // Líneas horizontales
+            for (let y = 0; y < height; y += 20) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(width, y);
+                ctx.stroke();
+            }
+            
+            // Cruz central
+            ctx.strokeStyle = 'rgba(0, 255, 65, 0.3)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(width/2, 0);
+            ctx.lineTo(width/2, height);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(0, height/2);
+            ctx.lineTo(width, height/2);
+            ctx.stroke();
+        }
+
+        function actualizarVisualizacion(resultado) {
+            // Actualizar vista lateral (deflexión vertical)
+            actualizarVistaLateral(resultado);
+            
+            // Actualizar vista superior (deflexión horizontal)
+            actualizarVistaSuperior(resultado);
+            
+            // Actualizar pantalla principal
+            actualizarPantallaPrincipal(resultado);
+        }
+
+        function actualizarVistaLateral(resultado) {
+            const ctx = elementos.canvasLateral.getContext('2d');
+            
+            // Redibujar estructura
+            dibujarVistaLateral();
+            
+            if (resultado.dentro_pantalla) {
+                // Dibujar trayectoria del haz de electrones
+                ctx.strokeStyle = '#00ff41';
+                ctx.lineWidth = 3;
+                ctx.shadowColor = '#00ff41';
+                ctx.shadowBlur = 10;
+                
+                const width = elementos.canvasLateral.width;
+                const height = elementos.canvasLateral.height;
+                
+                ctx.beginPath();
+                // Desde el cañón
+                ctx.moveTo(50, height/2);
+                // Hasta las placas verticales (con deflexión)
+                const deflexionY = resultado.posicion_y * 500; // Escalar para visualización
+                ctx.lineTo(120, height/2);
+                ctx.lineTo(160, height/2 + deflexionY);
+                // Hasta la pantalla
+                ctx.lineTo(width - 40, height/2 + deflexionY * 1.5);
+                ctx.stroke();
+                
+                // Punto de impacto
+                ctx.fillStyle = '#00ff41';
+                ctx.shadowBlur = 20;
+                ctx.beginPath();
+                ctx.arc(width - 40, height/2 + deflexionY * 1.5, 5, 0, 2 * Math.PI);
+                ctx.fill();
+                
+                ctx.shadowBlur = 0;
+            }
+        }
+
+        function actualizarVistaSuperior(resultado) {
+            const ctx = elementos.canvasSuperior.getContext('2d');
+            
+            // Redibujar estructura
+            dibujarVistaSuperior();
+            
+            if (resultado.dentro_pantalla) {
+                // Dibujar trayectoria del haz de electrones
+                ctx.strokeStyle = '#00ff41';
+                ctx.lineWidth = 3;
+                ctx.shadowColor = '#00ff41';
+                ctx.shadowBlur = 10;
+                
+                const width = elementos.canvasSuperior.width;
+                const height = elementos.canvasSuperior.height;
+                
+                ctx.beginPath();
+                // Desde el cañón
+                ctx.moveTo(50, height/2);
+                // Hasta las placas horizontales
+                ctx.lineTo(200, height/2);
+                // Con deflexión horizontal
+                const deflexionX = resultado.posicion_x * 500; // Escalar para visualización
+                ctx.lineTo(240, height/2 + deflexionX);
+                // Hasta la pantalla
+                ctx.lineTo(width - 40, height/2 + deflexionX * 1.5);
+                ctx.stroke();
+                
+                // Punto de impacto
+                ctx.fillStyle = '#00ff41';
+                ctx.shadowBlur = 20;
+                ctx.beginPath();
+                ctx.arc(width - 40, height/2 + deflexionX * 1.5, 5, 0, 2 * Math.PI);
+                ctx.fill();
+                
+                ctx.shadowBlur = 0;
+            }
+        }
+
+        function actualizarPantallaPrincipal(resultado) {
+            const ctx = elementos.canvasPantalla.getContext('2d');
+            const width = elementos.canvasPantalla.width;
+            const height = elementos.canvasPantalla.height;
+            
+            // No limpiar completamente para efecto de persistencia
+            if (estadoActual.modo === 'manual') {
+                limpiarPantalla();
+            }
+            
+            if (resultado.dentro_pantalla) {
+                // Convertir coordenadas del resultado a coordenadas del canvas
+                const centroX = width / 2;
+                const centroY = height / 2;
+                
+                // Escalar las coordenadas (resultado está en metros)
+                const escala = 1000; // 1000 pixels por metro
+                const puntoX = centroX + (resultado.posicion_x * escala);
+                const puntoY = centroY - (resultado.posicion_y * escala); // Invertir Y para canvas
+                
+                // Dibujar punto de impacto
+                ctx.fillStyle = '#00ff41';
+                ctx.shadowColor = '#00ff41';
+                ctx.shadowBlur = 20;
+                
+                ctx.beginPath();
+                ctx.arc(puntoX, puntoY, 4, 0, 2 * Math.PI);
+                ctx.fill();
+                
+                // Efecto adicional de brillo
+                ctx.globalAlpha = 0.5;
+                ctx.beginPath();
+                ctx.arc(puntoX, puntoY, 8, 0, 2 * Math.PI);
+                ctx.fill();
+                ctx.globalAlpha = 1.0;
+                
+                ctx.shadowBlur = 0;
+            }
+        }
+
+        function actualizarVisualizacionLissajous(datos) {
+            const ctx = elementos.canvasPantalla.getContext('2d');
+            const width = elementos.canvasPantalla.width;
+            const height = elementos.canvasPantalla.height;
+            
+            // Aplicar efecto de fade para crear trail
+            const tiempoPersistencia = parseFloat(elementos.tiempoPersistencia.value);
+            const alpha = 1.0 / (tiempoPersistencia * 30); // Ajustar según FPS
+            
+            ctx.fillStyle = `rgba(0, 0, 0, ${alpha})`;
+            ctx.fillRect(0, 0, width, height);
+            
+            // Redibujar grid con menos opacidad
+            ctx.strokeStyle = 'rgba(0, 255, 65, 0.05)';
+            ctx.lineWidth = 1;
+            
+            // Grid simplificado para mejor performance
+            for (let x = 0; x < width; x += 40) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, height);
+                ctx.stroke();
+            }
+            
+            for (let y = 0; y < height; y += 40) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(width, y);
+                ctx.stroke();
+            }
+            
+            // Dibujar nuevo punto
+            if (datos.posicion.dentro_pantalla) {
+                const centroX = width / 2;
+                const centroY = height / 2;
+                const escala = 1000;
+                
+                const puntoX = centroX + (datos.posicion.posicion_x * escala);
+                const puntoY = centroY - (datos.posicion.posicion_y * escala);
+                
+                // Punto principal
+                ctx.fillStyle = '#00ff41';
+                ctx.shadowColor = '#00ff41';
+                ctx.shadowBlur = 15;
+                
+                ctx.beginPath();
+                ctx.arc(puntoX, puntoY, 3, 0, 2 * Math.PI);
+                ctx.fill();
+                
+                // Efecto de brillo
+                ctx.globalAlpha = 0.7;
+                ctx.beginPath();
+                ctx.arc(puntoX, puntoY, 6, 0, 2 * Math.PI);
+                ctx.fill();
+                ctx.globalAlpha = 1.0;
+                
+                ctx.shadowBlur = 0;
+            }
+        }
+
+        function actualizarInfoPanel(resultado) {
+            document.getElementById('info-pos-x').textContent = (resultado.posicion_x * 1000).toFixed(3) + ' mm';
+            document.getElementById('info-pos-y').textContent = (resultado.posicion_y * 1000).toFixed(3) + ' mm';
+            document.getElementById('info-velocidad').textContent = (resultado.velocidad_inicial / 1000000).toFixed(3) + ' Mm/s';
+            document.getElementById('info-en-pantalla').textContent = resultado.dentro_pantalla ? 'Sí' : 'No';
+        }
+
+        //-------------------------------------------------------------------------------------
+        // FUNCIONES PARA CONTROL DE LISSAJOUS
+        //-------------------------------------------------------------------------------------
+        async function aplicarPresetLissajous() {
+            const presetSeleccionado = elementos.presetSelector.value;
+            
+            if (!presetSeleccionado) {
+                alert('Por favor selecciona un preset');
+                return;
+            }
+            
+            try {
+                await realizarPeticionAPI('/aplicar-preset-lissajous', 'POST', {
+                    preset: presetSeleccionado
+                });
+                
+                console.log(`✅ Preset aplicado: ${presetSeleccionado}`);
+                
+                // Reiniciar animación con el nuevo preset
+                if (estadoActual.modo === 'lissajous') {
+                    iniciarAnimacionLissajous();
+                }
+                
+            } catch (error) {
+                console.error('Error aplicando preset:', error);
+                alert('Error aplicando preset: ' + error.message);
+            }
+        }
+
+        function reiniciarAnimacion() {
+            if (estadoActual.modo === 'lissajous') {
+                limpiarPantalla();
+                iniciarAnimacionLissajous();
+                console.log('🔄 Animación Lissajous reiniciada');
+            }
+        }
+
+        function togglePausarAnimacion() {
+            if (estadoActual.animacionActiva) {
+                // Pausar
+                if (estadoActual.intervalos.lissajous) {
+                    clearInterval(estadoActual.intervalos.lissajous);
+                    estadoActual.intervalos.lissajous = null;
+                }
+                estadoActual.animacionActiva = false;
+                elementos.btnPausarAnimacion.textContent = 'Reanudar';
+                console.log('⏸️ Animación pausada');
+            } else {
+                // Reanudar
+                iniciarAnimacionLissajous();
+                console.log('▶️ Animación reanudada');
+            }
+        }
+
+        //-------------------------------------------------------------------------------------
+        // FUNCIONES DE UTILIDAD
+        //-------------------------------------------------------------------------------------
+        function actualizarInterfaz() {
+            // Actualizar displays de valores iniciales
+            actualizarValoresDisplay();
+            
+            // Configurar modo inicial
+            cambiarModo('manual');
+            
+            // Dibujar estructura inicial
+            dibujarEstructuraCRT();
+            
+            // Calcular posición inicial
+            actualizarSimulacion();
+        }
+
+        // Mostrar panel de información al pasar el mouse sobre la pantalla
+        elementos.canvasPantalla.addEventListener('mouseenter', () => {
+            elementos.infoPanel.classList.add('visible');
+        });
+
+        elementos.canvasPantalla.addEventListener('mouseleave', () => {
+            elementos.infoPanel.classList.remove('visible');
+        });
+
+        // Debugging en consola
+        window.simuladorCRT = {
+            estado: () => estadoActual,
+            api: realizarPeticionAPI,
+            reiniciar: () => location.reload()
+        };
+
+        console.log('🔧 Herramientas de debug disponibles en window.simuladorCRT');
+    </script>
+</body>
+</html> '12px monospace';
+            ctx.fillText('Cañón', 15, height/2 - 15);
+            ctx.fillText('Placas V', 100, height/2 - 40);
+            ctx.fillText('Pantalla', width - 80, 15);
+        }
+
+        function dibujarVistaSuperior() {
+            const ctx = elementos.canvasSuperior.getContext('2d');
+            const width = elementos.canvasSuperior.width;
+            const height = elementos.canvasSuperior.height;
+            
+            ctx.clearRect(0, 0, width, height);
+            
+            // Configurar estilo
+            ctx.strokeStyle = '#00ff41';
+            ctx.lineWidth = 2;
+            ctx.fillStyle = 'rgba(0, 255, 65, 0.1)';
+            
+            // Dibujar cañón de electrones
+            ctx.fillRect(20, height/2 - 10, 30, 20);
+            ctx.strokeRect(20, height/2 - 10, 30, 20);
+            
+            // Dibujar placas de deflexión horizontal
+            const placasX = 200;
+            const placasY = height/2;
+            const placasAncho = 8;
+            const placasAlto = 40;
+            const separacion = 30;
+            
+            // Placa izquierda
+            ctx.fillRect(placasX - separacion/2 - placasAncho, placasY - placasAlto/2, placasAncho, placasAlto);
+            ctx.strokeRect(placasX - separacion/2 - placasAncho, placasY - placasAlto/2, placasAncho, placasAlto);
+            
+            // Placa derecha
+            ctx.fillRect(placasX + separacion/2, placasY - placasAlto/2, placasAncho, placasAlto);
+            ctx.strokeRect(placasX + separacion/2, placasY - placasAlto/2, placasAncho, placasAlto);
+            
+            // Dibujar pantalla
+            ctx.fillRect(width - 40, 20, 20, height - 40);
+            ctx.strokeRect(width - 40, 20, 20, height - 40);
+            
+            // Etiquetas
+            ctx.fillStyle = '#00ff41';
+            ctx.font =
