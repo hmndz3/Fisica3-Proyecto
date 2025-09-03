@@ -172,10 +172,10 @@ def obtener_presets_lissajous():
             'nombre': 'Figura en 8',
             'descripcion': 'Relación de frecuencia 2:1',
             'frecuencia_vertical': 2.0,
-            'fase_vertical': 0.0,
+            'fase_vertical': 90.0,
             'amplitud_vertical': 100,
             'frecuencia_horizontal': 1.0,
-            'fase_horizontal': 0.0,
+            'fase_horizontal': 90.0,
             'amplitud_horizontal': 100
         },
         'trebol': {

@@ -6,7 +6,7 @@
     <title>Simulador CRT - Tubo de Rayos Catódicos</title>
     <style>
         /*-------------------------------------------------------------------------------------*/
-        /* ESTILOS GENERALES - TEMA CIENTIFICO ESTILO LABORATORIO */
+        /* ESTILOS GENERALES - TEMA MODERNO CON COLORES VIBRANTES */
         /*-------------------------------------------------------------------------------------*/
         * {
             margin: 0;
@@ -15,358 +15,527 @@
         }
 
         body {
-            font-family: 'Consolas', 'Monaco', monospace;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-            color: #00ff41;
-            overflow-x: hidden;
-            min-height: 100vh;
+            font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #0f3460 100%);
+            color: #ffffff;
+            overflow: hidden;
+            height: 100vh;
         }
 
         .container {
             display: grid;
-            grid-template-columns: 300px 1fr;
-            grid-template-rows: 60px 1fr;
+            grid-template-columns: 280px 1fr;
+            grid-template-rows: 70px 1fr;
             height: 100vh;
-            gap: 10px;
-            padding: 10px;
+            gap: 15px;
+            padding: 15px;
         }
 
         /*-------------------------------------------------------------------------------------*/
-        /* HEADER - TITULO Y CONTROLES GENERALES */
+        /* HEADER - TITULO CON GRADIENTE MODERNO */
         /*-------------------------------------------------------------------------------------*/
         .header {
             grid-column: 1 / -1;
-            background: rgba(0, 255, 65, 0.1);
-            border: 2px solid #00ff41;
-            border-radius: 10px;
-            padding: 10px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px;
+            padding: 15px 25px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            backdrop-filter: blur(10px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.2);
+            backdrop-filter: blur(20px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            animation: shimmer 3s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { left: -100%; }
+            100% { left: 100%; }
         }
 
         .header h1 {
-            font-size: 24px;
-            text-shadow: 0 0 10px #00ff41;
-            letter-spacing: 2px;
+            font-size: 28px;
+            font-weight: 700;
+            background: linear-gradient(45deg, #fff, #e0e7ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 2px 10px rgba(255, 255, 255, 0.1);
+            letter-spacing: 1px;
         }
 
         .modo-selector {
             display: flex;
-            gap: 10px;
+            gap: 12px;
             align-items: center;
+            z-index: 1;
         }
 
         .btn-modo {
-            padding: 8px 16px;
-            background: transparent;
-            color: #00ff41;
-            border: 2px solid #00ff41;
-            border-radius: 5px;
+            padding: 12px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             font-family: inherit;
+            font-weight: 500;
+            backdrop-filter: blur(10px);
         }
 
         .btn-modo:hover {
-            background: rgba(0, 255, 65, 0.2);
-            box-shadow: 0 0 15px rgba(0, 255, 65, 0.5);
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(255, 255, 255, 0.1);
         }
 
         .btn-modo.activo {
-            background: #00ff41;
-            color: #1a1a2e;
-            box-shadow: 0 0 20px rgba(0, 255, 65, 0.8);
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            color: white;
+            border-color: #ff6b6b;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255, 107, 107, 0.3);
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+            background: #10ac84;
+            box-shadow: 0 0 15px #10ac84;
+            animation: pulse 2s ease-in-out infinite;
         }
 
         /*-------------------------------------------------------------------------------------*/
-        /* PANEL DE CONTROL LATERAL */
+        /* PANEL DE CONTROL CON GRADIENTE ATRACTIVO */
         /*-------------------------------------------------------------------------------------*/
         .panel-control {
-            background: rgba(0, 255, 65, 0.05);
-            border: 2px solid #00ff41;
-            border-radius: 10px;
+            background: linear-gradient(180deg, #2d3748 0%, #1a202c 100%);
+            border-radius: 20px;
             padding: 20px;
-            backdrop-filter: blur(10px);
+            backdrop-filter: blur(20px);
             overflow-y: auto;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .panel-control::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .panel-control::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+        }
+
+        .panel-control::-webkit-scrollbar-thumb {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border-radius: 4px;
         }
 
         .seccion-control {
             margin-bottom: 25px;
-            padding: 15px;
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 8px;
-            border-left: 4px solid #00ff41;
+            padding: 20px;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+            border-radius: 16px;
+            border-left: 4px solid;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .seccion-control:nth-child(1) { border-left-color: #ff6b6b; }
+        .seccion-control:nth-child(2) { border-left-color: #4ecdc4; }
+        .seccion-control:nth-child(3) { border-left-color: #45b7d1; }
+        .seccion-control:nth-child(4) { border-left-color: #f9ca24; }
+        .seccion-control:nth-child(5) { border-left-color: #6c5ce7; }
+
+        .seccion-control:hover {
+            transform: translateX(5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
         }
 
         .seccion-control h3 {
             margin-bottom: 15px;
-            color: #00ff41;
             font-size: 16px;
+            font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 1px;
-            text-shadow: 0 0 5px #00ff41;
+            color: #ffffff;
         }
 
         .control-grupo {
-            margin-bottom: 15px;
+            margin-bottom: 18px;
         }
 
         .control-grupo label {
             display: block;
-            margin-bottom: 5px;
-            font-size: 12px;
-            color: #88ff88;
+            margin-bottom: 8px;
+            font-size: 13px;
+            color: #a0aec0;
+            font-weight: 500;
         }
 
         .slider {
             width: 100%;
-            height: 6px;
-            background: #333;
-            border-radius: 3px;
+            height: 8px;
+            background: linear-gradient(90deg, #2d3748, #4a5568);
+            border-radius: 4px;
             outline: none;
-            opacity: 0.7;
-            transition: opacity 0.3s;
+            transition: all 0.3s ease;
+            cursor: pointer;
         }
 
         .slider:hover {
-            opacity: 1;
+            transform: scaleY(1.2);
         }
 
         .slider::-webkit-slider-thumb {
             appearance: none;
-            width: 20px;
-            height: 20px;
-            background: #00ff41;
+            width: 24px;
+            height: 24px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
             border-radius: 50%;
             cursor: pointer;
-            box-shadow: 0 0 10px rgba(0, 255, 65, 0.8);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            transition: all 0.3s ease;
+        }
+
+        .slider::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
         }
 
         .valor-display {
-            background: rgba(0, 0, 0, 0.5);
-            color: #00ff41;
-            padding: 5px 10px;
-            border-radius: 3px;
-            font-family: monospace;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+            color: #ffffff;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-family: 'Fira Code', monospace;
             font-size: 14px;
-            margin-top: 5px;
-            border: 1px solid #00ff41;
+            font-weight: 600;
+            margin-top: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
             text-align: center;
+            backdrop-filter: blur(10px);
         }
 
         .preset-selector {
             width: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            color: #00ff41;
-            border: 2px solid #00ff41;
-            padding: 8px;
-            border-radius: 5px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+            color: #ffffff;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            padding: 12px;
+            border-radius: 12px;
             font-family: inherit;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .preset-selector:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
 
         .preset-selector option {
-            background: #1a1a2e;
-            color: #00ff41;
+            background: #2d3748;
+            color: #ffffff;
         }
 
         /*-------------------------------------------------------------------------------------*/
-        /* AREA DE VISUALIZACION PRINCIPAL */
+        /* AREA DE VISUALIZACION CON LAYOUT MODERNO */
         /*-------------------------------------------------------------------------------------*/
         .area-visualizacion {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            grid-template-rows: 1fr 1fr;
-            gap: 10px;
-            background: rgba(0, 255, 65, 0.05);
-            border: 2px solid #00ff41;
-            border-radius: 10px;
-            padding: 20px;
-            backdrop-filter: blur(10px);
+            grid-template-rows: 200px 1fr;
+            gap: 15px;
+            height: 100%;
         }
 
         .vista {
-            background: rgba(0, 0, 0, 0.7);
-            border: 2px solid #00ff41;
-            border-radius: 8px;
+            background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+            border-radius: 16px;
             position: relative;
             display: flex;
             flex-direction: column;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .vista:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
         }
 
         .vista-header {
-            background: rgba(0, 255, 65, 0.2);
-            padding: 8px 15px;
-            border-bottom: 1px solid #00ff41;
-            font-weight: bold;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 12px 16px;
+            font-weight: 600;
             text-align: center;
-            font-size: 14px;
+            font-size: 13px;
             text-transform: uppercase;
             letter-spacing: 1px;
+            color: white;
+            position: relative;
+        }
+
+        .vista-lateral .vista-header {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+        }
+
+        .vista-superior .vista-header {
+            background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%);
         }
 
         .vista-canvas {
             flex: 1;
-            background: #000;
+            background: #000000;
             position: relative;
+            border-radius: 0 0 16px 16px;
         }
 
         canvas {
             width: 100%;
             height: 100%;
-            border-radius: 0 0 6px 6px;
+            border-radius: 0 0 16px 16px;
         }
 
         .pantalla-principal {
             grid-column: 1 / -1;
             grid-row: 2;
+            min-height: 300px;
+        }
+
+        .pantalla-principal .vista-header {
+            background: linear-gradient(135deg, #45b7d1 0%, #2980b9 100%);
         }
 
         .pantalla-principal canvas {
-            background: radial-gradient(circle at center, #001100 0%, #000000 100%);
+            background: radial-gradient(circle at center, #001a00 0%, #000000 100%);
         }
 
         /*-------------------------------------------------------------------------------------*/
-        /* EFECTOS VISUALES Y ANIMACIONES */
+        /* EFECTOS Y ANIMACIONES MEJORADAS */
         /*-------------------------------------------------------------------------------------*/
         .electron-dot {
             position: absolute;
-            width: 4px;
-            height: 4px;
-            background: #00ff41;
+            width: 6px;
+            height: 6px;
             border-radius: 50%;
-            box-shadow: 0 0 10px #00ff41, 0 0 20px #00ff41, 0 0 30px #00ff41;
-            animation: pulse 1s ease-in-out infinite alternate;
+            box-shadow: 0 0 20px currentColor, 0 0 40px currentColor;
+            animation: electronPulse 1.5s ease-in-out infinite alternate;
+        }
+
+        @keyframes electronPulse {
+            from { 
+                transform: scale(1); 
+                opacity: 1; 
+            }
+            to { 
+                transform: scale(1.5); 
+                opacity: 0.6; 
+            }
         }
 
         @keyframes pulse {
-            from { transform: scale(1); opacity: 1; }
-            to { transform: scale(1.5); opacity: 0.7; }
-        }
-
-        .fade-trail {
-            opacity: 0.8;
-            transition: opacity 2s linear;
-        }
-
-        .fade-trail.fading {
-            opacity: 0;
+            0%, 100% { 
+                transform: scale(1); 
+                opacity: 1; 
+            }
+            50% { 
+                transform: scale(1.2); 
+                opacity: 0.8; 
+            }
         }
 
         /*-------------------------------------------------------------------------------------*/
-        /* PANEL DE INFORMACION */
+        /* PANEL DE INFORMACION MEJORADO */
         /*-------------------------------------------------------------------------------------*/
         .info-panel {
             position: fixed;
-            top: 80px;
+            top: 100px;
             right: 20px;
-            width: 250px;
-            background: rgba(0, 0, 0, 0.9);
-            border: 2px solid #00ff41;
-            border-radius: 10px;
-            padding: 15px;
-            backdrop-filter: blur(10px);
+            width: 280px;
+            background: linear-gradient(135deg, rgba(26, 32, 44, 0.95), rgba(45, 55, 72, 0.95));
+            border-radius: 16px;
+            padding: 20px;
+            backdrop-filter: blur(20px);
             display: none;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
         }
 
         .info-panel.visible {
             display: block;
-            animation: slideIn 0.3s ease-out;
+            animation: slideInRight 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        @keyframes slideIn {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
+        @keyframes slideInRight {
+            from { 
+                transform: translateX(100%) scale(0.9); 
+                opacity: 0; 
+            }
+            to { 
+                transform: translateX(0) scale(1); 
+                opacity: 1; 
+            }
+        }
+
+        .info-panel h4 {
+            margin-bottom: 16px;
+            color: #667eea;
+            font-size: 16px;
+            font-weight: 600;
         }
 
         .info-item {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 8px;
-            font-size: 12px;
+            margin-bottom: 12px;
+            font-size: 13px;
         }
 
         .info-label {
-            color: #88ff88;
+            color: #a0aec0;
         }
 
         .info-value {
-            color: #00ff41;
-            font-family: monospace;
+            color: #ffffff;
+            font-family: 'Fira Code', monospace;
+            font-weight: 600;
         }
 
         /*-------------------------------------------------------------------------------------*/
-        /* CONTROLES RESPONSIVOS */
+        /* BOTONES Y CONTROLES MODERNOS */
         /*-------------------------------------------------------------------------------------*/
+        .btn-accion {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            margin: 6px 0;
+            width: 100%;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-accion:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-accion:active {
+            transform: translateY(0);
+        }
+
+        /*-------------------------------------------------------------------------------------*/
+        /* RESPONSIVE DESIGN MEJORADO */
+        /*-------------------------------------------------------------------------------------*/
+        @media (max-width: 1400px) {
+            .container {
+                grid-template-columns: 260px 1fr;
+            }
+        }
+
         @media (max-width: 1200px) {
             .container {
-                grid-template-columns: 250px 1fr;
+                grid-template-columns: 240px 1fr;
+            }
+            
+            .header h1 {
+                font-size: 24px;
             }
         }
 
         @media (max-width: 768px) {
             .container {
                 grid-template-columns: 1fr;
-                grid-template-rows: auto auto 1fr;
+                grid-template-rows: auto 250px 1fr;
+                height: 100vh;
+                overflow-y: auto;
             }
             
             .panel-control {
-                max-height: 200px;
+                max-height: 250px;
+                overflow-y: auto;
             }
             
             .area-visualizacion {
                 grid-template-columns: 1fr;
-                grid-template-rows: 150px 150px 250px;
-                max-height: 600px;
+                grid-template-rows: 150px 150px 1fr;
+                min-height: 500px;
             }
             
             .pantalla-principal {
-                min-height: 230px;
-                max-height: 250px;
+                min-height: 200px;
             }
         }
 
         /*-------------------------------------------------------------------------------------*/
-        /* BOTONES Y CONTROLES ADICIONALES */
+        /* EFECTOS DE CARGA Y TRANSICIONES */
         /*-------------------------------------------------------------------------------------*/
-        .btn-accion {
-            background: transparent;
-            color: #00ff41;
-            border: 2px solid #00ff41;
-            padding: 8px 16px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-family: inherit;
-            font-size: 12px;
-            transition: all 0.3s ease;
-            margin: 5px 0;
-            width: 100%;
+        .vista {
+            opacity: 0;
+            animation: fadeInUp 0.6s ease forwards;
         }
 
-        .btn-accion:hover {
-            background: rgba(0, 255, 65, 0.2);
-            box-shadow: 0 0 15px rgba(0, 255, 65, 0.5);
+        .vista:nth-child(1) { animation-delay: 0.1s; }
+        .vista:nth-child(2) { animation-delay: 0.2s; }
+        .vista:nth-child(3) { animation-delay: 0.3s; }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
-        .btn-accion:active {
-            transform: scale(0.98);
+        .seccion-control {
+            opacity: 0;
+            animation: fadeInLeft 0.6s ease forwards;
         }
 
-        .status-indicator {
-            display: inline-block;
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            margin-right: 8px;
-            background: #ff0000;
-            box-shadow: 0 0 5px #ff0000;
-        }
+        .seccion-control:nth-child(1) { animation-delay: 0.1s; }
+        .seccion-control:nth-child(2) { animation-delay: 0.2s; }
+        .seccion-control:nth-child(3) { animation-delay: 0.3s; }
+        .seccion-control:nth-child(4) { animation-delay: 0.4s; }
+        .seccion-control:nth-child(5) { animation-delay: 0.5s; }
 
-        .status-indicator.activo {
-            background: #00ff41;
-            box-shadow: 0 0 5px #00ff41;
-            animation: pulse 2s ease-in-out infinite;
+        @keyframes fadeInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
         }
     </style>
 </head>
@@ -379,7 +548,7 @@
                 <button class="btn-modo activo" id="btn-modo-manual">Manual</button>
                 <button class="btn-modo" id="btn-modo-lissajous">Lissajous</button>
                 <span class="status-indicator activo" id="status-conexion"></span>
-                <span id="status-texto">Simulación</span>
+                <span id="status-texto">Simulación Activa</span>
             </div>
         </header>
 
@@ -500,17 +669,17 @@
 
         <!-- Área principal de visualización -->
         <main class="area-visualizacion">
-            <div class="vista">
-                <div class="vista-header">Vista Lateral - Deflexión Vertical</div>
+            <div class="vista vista-lateral">
+                <div class="vista-header">📐 Vista Lateral - Deflexión Vertical</div>
                 <div class="vista-canvas">
-                    <canvas id="canvas-lateral" width="400" height="300"></canvas>
+                    <canvas id="canvas-lateral" width="400" height="200"></canvas>
                 </div>
             </div>
 
-            <div class="vista">
-                <div class="vista-header">Vista Superior - Deflexión Horizontal</div>
+            <div class="vista vista-superior">
+                <div class="vista-header">📏 Vista Superior - Deflexión Horizontal</div>
                 <div class="vista-canvas">
-                    <canvas id="canvas-superior" width="400" height="300"></canvas>
+                    <canvas id="canvas-superior" width="400" height="180"></canvas>
                 </div>
             </div>
 
@@ -523,20 +692,20 @@
         </main>
     </div>
 
-    <!-- Panel de información (opcional, se muestra al hacer hover) -->
+    <!-- Panel de información -->
     <div class="info-panel" id="info-panel">
-        <h4 style="margin-bottom: 10px; color: #00ff41;">Información del Sistema</h4>
+        <h4>📊 Información del Sistema</h4>
         <div class="info-item">
             <span class="info-label">Posición X:</span>
-            <span class="info-value" id="info-pos-x">0.000 m</span>
+            <span class="info-value" id="info-pos-x">0.000 mm</span>
         </div>
         <div class="info-item">
             <span class="info-label">Posición Y:</span>
-            <span class="info-value" id="info-pos-y">0.000 m</span>
+            <span class="info-value" id="info-pos-y">0.000 mm</span>
         </div>
         <div class="info-item">
             <span class="info-label">Velocidad:</span>
-            <span class="info-value" id="info-velocidad">0.000 m/s</span>
+            <span class="info-value" id="info-velocidad">0.000 Mm/s</span>
         </div>
         <div class="info-item">
             <span class="info-label">En pantalla:</span>
@@ -989,7 +1158,7 @@
         }
 
         //-------------------------------------------------------------------------------------
-        // FUNCIONES DE RENDERIZADO Y VISUALIZACION
+        // FUNCIONES DE RENDERIZADO CON COLORES MEJORADOS
         //-------------------------------------------------------------------------------------
         function dibujarEstructuraCRT() {
             dibujarVistaLateral();
@@ -1004,21 +1173,27 @@
             
             ctx.clearRect(0, 0, width, height);
             
-            // Configurar estilo
-            ctx.strokeStyle = '#00ff41';
+            // Configurar estilo con colores vibrantes
+            ctx.strokeStyle = '#ff6b6b';
             ctx.lineWidth = 2;
-            ctx.fillStyle = 'rgba(0, 255, 65, 0.1)';
+            ctx.fillStyle = 'rgba(255, 107, 107, 0.15)';
             
             // Dibujar cañón de electrones
             ctx.fillRect(20, height/2 - 10, 30, 20);
             ctx.strokeRect(20, height/2 - 10, 30, 20);
             
-            // Dibujar placas de deflexión vertical
+            // Dibujar placas de deflexión vertical con gradiente
             const placasX = 120;
             const placasY = height/2;
             const placasAncho = 40;
             const placasAlto = 8;
             const separacion = 30;
+            
+            // Gradiente para las placas
+            const gradient = ctx.createLinearGradient(placasX, 0, placasX + placasAncho, 0);
+            gradient.addColorStop(0, 'rgba(255, 107, 107, 0.8)');
+            gradient.addColorStop(1, 'rgba(238, 90, 36, 0.8)');
+            ctx.fillStyle = gradient;
             
             // Placa superior
             ctx.fillRect(placasX, placasY - separacion/2 - placasAlto, placasAncho, placasAlto);
@@ -1028,16 +1203,17 @@
             ctx.fillRect(placasX, placasY + separacion/2, placasAncho, placasAlto);
             ctx.strokeRect(placasX, placasY + separacion/2, placasAncho, placasAlto);
             
-            // Dibujar pantalla
+            // Dibujar pantalla con efecto brillante
+            ctx.fillStyle = '#ff6b6b';
             ctx.fillRect(width - 40, 20, 20, height - 40);
             ctx.strokeRect(width - 40, 20, 20, height - 40);
             
-            // Etiquetas
-            ctx.fillStyle = '#00ff41';
-            ctx.font = '12px monospace';
-            ctx.fillText('Cañón', 15, height/2 - 15);
-            ctx.fillText('Placas V', 110, height/2 - 40);
-            ctx.fillText('Pantalla', width - 80, 15);
+            // Etiquetas con mejor tipografía
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 11px Inter';
+            ctx.fillText('Cañón', 18, height/2 - 15);
+            ctx.fillText('Placas V', 108, height/2 - 40);
+            ctx.fillText('Pantalla', width - 85, 15);
         }
 
         function dibujarVistaSuperior() {
@@ -1047,10 +1223,10 @@
             
             ctx.clearRect(0, 0, width, height);
             
-            // Configurar estilo
-            ctx.strokeStyle = '#00ff41';
+            // Configurar estilo con colores turquesa
+            ctx.strokeStyle = '#4ecdc4';
             ctx.lineWidth = 2;
-            ctx.fillStyle = 'rgba(0, 255, 65, 0.1)';
+            ctx.fillStyle = 'rgba(78, 205, 196, 0.15)';
             
             // Dibujar cañón de electrones
             ctx.fillRect(20, height/2 - 10, 30, 20);
@@ -1063,6 +1239,12 @@
             const placasAlto = 40;
             const separacion = 30;
             
+            // Gradiente para las placas
+            const gradient = ctx.createLinearGradient(0, placasY - placasAlto/2, 0, placasY + placasAlto/2);
+            gradient.addColorStop(0, 'rgba(78, 205, 196, 0.8)');
+            gradient.addColorStop(1, 'rgba(68, 160, 141, 0.8)');
+            ctx.fillStyle = gradient;
+            
             // Placa izquierda
             ctx.fillRect(placasX - separacion/2 - placasAncho, placasY - placasAlto/2, placasAncho, placasAlto);
             ctx.strokeRect(placasX - separacion/2 - placasAncho, placasY - placasAlto/2, placasAncho, placasAlto);
@@ -1072,15 +1254,16 @@
             ctx.strokeRect(placasX + separacion/2, placasY - placasAlto/2, placasAncho, placasAlto);
             
             // Dibujar pantalla
+            ctx.fillStyle = '#4ecdc4';
             ctx.fillRect(width - 40, 20, 20, height - 40);
             ctx.strokeRect(width - 40, 20, 20, height - 40);
             
             // Etiquetas
-            ctx.fillStyle = '#00ff41';
-            ctx.font = '12px monospace';
-            ctx.fillText('Cañón', 15, height/2 - 15);
-            ctx.fillText('Placas H', 180, height/2 - 50);
-            ctx.fillText('Pantalla', width - 80, 15);
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 11px Inter';
+            ctx.fillText('Cañón', 18, height/2 - 15);
+            ctx.fillText('Placas H', 175, height/2 - 50);
+            ctx.fillText('Pantalla', width - 85, 15);
         }
 
         function limpiarPantalla() {
@@ -1092,8 +1275,8 @@
             ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
             ctx.fillRect(0, 0, width, height);
             
-            // Dibujar grid de fondo
-            ctx.strokeStyle = 'rgba(0, 255, 65, 0.1)';
+            // Dibujar grid de fondo con colores suaves
+            ctx.strokeStyle = 'rgba(69, 183, 209, 0.15)';
             ctx.lineWidth = 1;
             
             // Líneas verticales
@@ -1112,8 +1295,8 @@
                 ctx.stroke();
             }
             
-            // Cruz central
-            ctx.strokeStyle = 'rgba(0, 255, 65, 0.3)';
+            // Cruz central con colores vibrantes
+            ctx.strokeStyle = 'rgba(69, 183, 209, 0.4)';
             ctx.lineWidth = 2;
             ctx.beginPath();
             ctx.moveTo(width/2, 0);
@@ -1125,17 +1308,6 @@
             ctx.stroke();
         }
 
-        function actualizarVisualizacion(resultado) {
-            // Actualizar vista lateral (deflexión vertical)
-            actualizarVistaLateral(resultado);
-            
-            // Actualizar vista superior (deflexión horizontal)
-            actualizarVistaSuperior(resultado);
-            
-            // Actualizar pantalla principal
-            actualizarPantallaPrincipal(resultado);
-        }
-
         function actualizarVistaLateral(resultado) {
             const ctx = elementos.canvasLateral.getContext('2d');
             
@@ -1143,37 +1315,34 @@
             dibujarVistaLateral();
             
             if (resultado.dentro_pantalla) {
-                // Dibujar trayectoria del haz de electrones con animación suave
-                ctx.strokeStyle = '#00ff41';
-                ctx.lineWidth = 3;
-                ctx.shadowColor = '#00ff41';
-                ctx.shadowBlur = 10;
+                // Haz de electrones con colores dinámicos
+                const tiempo = Date.now() / 1000;
+                const hue = (tiempo * 50) % 360; // Color que cambia con el tiempo
+                
+                ctx.strokeStyle = `hsl(${hue}, 80%, 60%)`;
+                ctx.lineWidth = 4;
+                ctx.shadowColor = `hsl(${hue}, 80%, 60%)`;
+                ctx.shadowBlur = 15;
                 
                 const width = elementos.canvasLateral.width;
                 const height = elementos.canvasLateral.height;
                 
-                // Agregar efecto de tiempo para animación suave
-                const tiempo = Date.now() / 1000;
-                const intensidad = 0.8 + 0.2 * Math.sin(tiempo * 5); // Pulsación suave
-                
+                const intensidad = 0.8 + 0.2 * Math.sin(tiempo * 5);
                 ctx.globalAlpha = intensidad;
                 
                 ctx.beginPath();
-                // Desde el cañón
                 ctx.moveTo(50, height/2);
-                // Hasta las placas verticales (con deflexión)
-                const deflexionY = resultado.posicion_y * 1000; // Escalar para visualización
+                const deflexionY = resultado.posicion_y * 1200; // Aumentar escala para mejor visualización
                 ctx.lineTo(120, height/2);
                 ctx.lineTo(160, height/2 + deflexionY);
-                // Hasta la pantalla
                 ctx.lineTo(width - 40, height/2 + deflexionY * 1.5);
                 ctx.stroke();
                 
-                // Punto de impacto con pulsación
-                ctx.fillStyle = '#00ff41';
-                ctx.shadowBlur = 20;
+                // Punto de impacto con efecto pulsante colorido
+                ctx.fillStyle = `hsl(${hue}, 90%, 70%)`;
+                ctx.shadowBlur = 25;
                 ctx.beginPath();
-                const radio = 3 + 2 * Math.sin(tiempo * 8); // Radio pulsante
+                const radio = 4 + 3 * Math.sin(tiempo * 8);
                 ctx.arc(width - 40, height/2 + deflexionY * 1.5, radio, 0, 2 * Math.PI);
                 ctx.fill();
                 
@@ -1189,38 +1358,34 @@
             dibujarVistaSuperior();
             
             if (resultado.dentro_pantalla) {
-                // Dibujar trayectoria del haz de electrones con animación suave
-                ctx.strokeStyle = '#00ff41';
-                ctx.lineWidth = 3;
-                ctx.shadowColor = '#00ff41';
-                ctx.shadowBlur = 10;
+                // Haz de electrones con colores complementarios
+                const tiempo = Date.now() / 1000;
+                const hue = ((tiempo * 50) + 180) % 360; // Color complementario al lateral
+                
+                ctx.strokeStyle = `hsl(${hue}, 80%, 60%)`;
+                ctx.lineWidth = 4;
+                ctx.shadowColor = `hsl(${hue}, 80%, 60%)`;
+                ctx.shadowBlur = 15;
                 
                 const width = elementos.canvasSuperior.width;
                 const height = elementos.canvasSuperior.height;
                 
-                // Agregar efecto de tiempo para animación suave
-                const tiempo = Date.now() / 1000;
-                const intensidad = 0.8 + 0.2 * Math.sin(tiempo * 5); // Pulsación suave
-                
+                const intensidad = 0.8 + 0.2 * Math.sin(tiempo * 5);
                 ctx.globalAlpha = intensidad;
                 
                 ctx.beginPath();
-                // Desde el cañón
                 ctx.moveTo(50, height/2);
-                // Hasta las placas horizontales
                 ctx.lineTo(180, height/2);
-                // Con deflexión horizontal
-                const deflexionX = resultado.posicion_x * 1000; // Escalar para visualización
+                const deflexionX = resultado.posicion_x * 1200; // Aumentar escala
                 ctx.lineTo(220, height/2 + deflexionX);
-                // Hasta la pantalla
                 ctx.lineTo(width - 40, height/2 + deflexionX * 1.5);
                 ctx.stroke();
                 
-                // Punto de impacto con pulsación
-                ctx.fillStyle = '#00ff41';
-                ctx.shadowBlur = 20;
+                // Punto de impacto
+                ctx.fillStyle = `hsl(${hue}, 90%, 70%)`;
+                ctx.shadowBlur = 25;
                 ctx.beginPath();
-                const radio = 3 + 2 * Math.sin(tiempo * 8); // Radio pulsante
+                const radio = 4 + 3 * Math.sin(tiempo * 8);
                 ctx.arc(width - 40, height/2 + deflexionX * 1.5, radio, 0, 2 * Math.PI);
                 ctx.fill();
                 
@@ -1249,22 +1414,34 @@
                 const puntoX = centroX + (resultado.posicion_x * escala);
                 const puntoY = centroY - (resultado.posicion_y * escala); // Invertir Y para canvas
                 
-                // Dibujar punto de impacto
-                ctx.fillStyle = '#00ff41';
-                ctx.shadowColor = '#00ff41';
-                ctx.shadowBlur = 20;
+                // Colores dinámicos para el punto de impacto
+                const tiempo = Date.now() / 1000;
+                const hue = (tiempo * 30) % 360;
+                
+                // Dibujar punto de impacto con múltiples capas
+                ctx.fillStyle = `hsl(${hue}, 100%, 60%)`;
+                ctx.shadowColor = `hsl(${hue}, 100%, 60%)`;
+                ctx.shadowBlur = 30;
                 
                 ctx.beginPath();
-                ctx.arc(puntoX, puntoY, 4, 0, 2 * Math.PI);
+                ctx.arc(puntoX, puntoY, 5, 0, 2 * Math.PI);
                 ctx.fill();
                 
-                // Efecto adicional de brillo
-                ctx.globalAlpha = 0.5;
+                // Capa de brillo adicional
+                ctx.globalAlpha = 0.6;
+                ctx.fillStyle = `hsl(${hue}, 100%, 80%)`;
                 ctx.beginPath();
                 ctx.arc(puntoX, puntoY, 8, 0, 2 * Math.PI);
                 ctx.fill();
-                ctx.globalAlpha = 1.0;
                 
+                // Capa exterior suave
+                ctx.globalAlpha = 0.3;
+                ctx.fillStyle = `hsl(${hue}, 80%, 70%)`;
+                ctx.beginPath();
+                ctx.arc(puntoX, puntoY, 12, 0, 2 * Math.PI);
+                ctx.fill();
+                
+                ctx.globalAlpha = 1.0;
                 ctx.shadowBlur = 0;
             }
         }
@@ -1274,16 +1451,16 @@
             const width = elementos.canvasPantalla.width;
             const height = elementos.canvasPantalla.height;
             
-            // Aplicar efecto de fade para crear trail
+            // Aplicar efecto de fade para crear trail con colores
             const tiempoPersistencia = parseFloat(elementos.tiempoPersistencia.value);
-            const alpha = Math.min(0.02, 1.0 / (tiempoPersistencia * 60)); // Ajustar según FPS
+            const alpha = Math.min(0.05, 1.0 / (tiempoPersistencia * 60));
             
             ctx.fillStyle = `rgba(0, 0, 0, ${alpha})`;
             ctx.fillRect(0, 0, width, height);
             
-            // Redibujar grid con menos opacidad cada ciertos frames
-            if (Math.random() < 0.1) { // Solo 10% del tiempo para mejor performance
-                ctx.strokeStyle = 'rgba(0, 255, 65, 0.05)';
+            // Redibujar grid ocasionalmente
+            if (Math.random() < 0.05) {
+                ctx.strokeStyle = 'rgba(69, 183, 209, 0.1)';
                 ctx.lineWidth = 1;
                 
                 // Cruz central
@@ -1297,7 +1474,7 @@
                 ctx.stroke();
             }
             
-            // Dibujar nuevo punto
+            // Dibujar nuevo punto con colores de arcoíris
             if (resultado.dentro_pantalla) {
                 const centroX = width / 2;
                 const centroY = height / 2;
@@ -1306,22 +1483,27 @@
                 const puntoX = centroX + (resultado.posicion_x * escala);
                 const puntoY = centroY - (resultado.posicion_y * escala);
                 
-                // Punto principal
-                ctx.fillStyle = '#00ff41';
-                ctx.shadowColor = '#00ff41';
-                ctx.shadowBlur = 15;
+                // Colores que cambian según la posición y el tiempo
+                const tiempo = Date.now() / 1000;
+                const hue = (tiempo * 60 + (puntoX + puntoY) * 0.5) % 360;
+                
+                // Punto principal con brillo intenso
+                ctx.fillStyle = `hsl(${hue}, 95%, 65%)`;
+                ctx.shadowColor = `hsl(${hue}, 95%, 65%)`;
+                ctx.shadowBlur = 20;
                 
                 ctx.beginPath();
-                ctx.arc(puntoX, puntoY, 2, 0, 2 * Math.PI);
+                ctx.arc(puntoX, puntoY, 3, 0, 2 * Math.PI);
                 ctx.fill();
                 
-                // Efecto de brillo
+                // Efecto de brillo expandido
                 ctx.globalAlpha = 0.7;
+                ctx.fillStyle = `hsl(${hue}, 90%, 75%)`;
                 ctx.beginPath();
-                ctx.arc(puntoX, puntoY, 4, 0, 2 * Math.PI);
+                ctx.arc(puntoX, puntoY, 6, 0, 2 * Math.PI);
                 ctx.fill();
-                ctx.globalAlpha = 1.0;
                 
+                ctx.globalAlpha = 1.0;
                 ctx.shadowBlur = 0;
             }
         }
@@ -1468,7 +1650,7 @@
             actualizarSimulacion();
         }
 
-        // Mostrar panel de información al pasar el mouse sobre la pantalla
+        // Eventos para mostrar panel de información
         elementos.canvasPantalla.addEventListener('mouseenter', () => {
             elementos.infoPanel.classList.add('visible');
         });
@@ -1477,7 +1659,7 @@
             elementos.infoPanel.classList.remove('visible');
         });
 
-        // Limpiar todos los intervalos al cerrar la página
+        // Limpiar intervalos al cerrar la página
         window.addEventListener('beforeunload', () => {
             if (estadoActual.intervalos.lissajous) {
                 clearInterval(estadoActual.intervalos.lissajous);
@@ -1490,7 +1672,7 @@
             }
         });
 
-        // Debugging en consola
+        // Herramientas de debugging
         window.simuladorCRT = {
             estado: () => estadoActual,
             reiniciar: () => location.reload(),
