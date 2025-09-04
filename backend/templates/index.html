@@ -971,6 +971,43 @@
             }
         }
 
+
+        function actualizarSelectorPresets() {
+            const selector = elementos.presetSelector;
+            selector.innerHTML = `
+                <option value="">Seleccionar Preset...</option>
+                <optgroup label="📏 Fila 1: Ratio 1:1 (Frecuencias iguales)">
+                    <option value="linea_diagonal">Línea Diagonal (δ=0°)</option>
+                    <option value="elipse_45">Elipse 45° (δ=45°)</option>
+                    <option value="circulo">Círculo Perfecto (δ=90°)</option>
+                    <option value="elipse_135">Elipse 135° (δ=135°)</option>
+                    <option value="linea_contraria">Línea Contraria (δ=180°)</option>
+                </optgroup>
+                <optgroup label="🔢 Fila 2: Ratio 1:2">
+                    <option value="ocho_vertical_0">Ocho Vertical (δ=0°)</option>
+                    <option value="curva_1_2_45">Curva 1:2 (δ=45°)</option>
+                    <option value="ocho_cerrado">Ocho Cerrado (δ=90°)</option>
+                    <option value="curva_1_2_135">Curva 1:2 (δ=135°)</option>
+                    <option value="ocho_abierto">Ocho Abierto (δ=180°)</option>
+                </optgroup>
+                <optgroup label="🍀 Fila 3: Ratio 1:3">
+                    <option value="trebol_1_3_0">Trébol 1:3 (δ=0°)</option>
+                    <option value="trebol_1_3_45">Trébol 1:3 (δ=45°)</option>
+                    <option value="trebol_1_3_90">Trébol 1:3 (δ=90°)</option>
+                    <option value="trebol_1_3_135">Trébol 1:3 (δ=135°)</option>
+                    <option value="trebol_1_3_180">Trébol 1:3 (δ=180°)</option>
+                </optgroup>
+                <optgroup label="🦋 Fila 4: Ratio 2:3 (Patrones Complejos)">
+                    <option value="complejo_2_3_0">Complejo 2:3 (δ=0°)</option>
+                    <option value="complejo_2_3_45">Complejo 2:3 (δ=45°)</option>
+                    <option value="mariposa">Mariposa 2:3 (δ=90°)</option>
+                    <option value="complejo_2_3_135">Complejo 2:3 (δ=135°)</option>
+                    <option value="complejo_2_3_180">Complejo 2:3 (δ=180°)</option>
+                </optgroup>
+            `;
+        }
+
+
         function actualizarParametrosLissajous() {
             estadoActual.parametrosLissajous = {
                 frecuencia_vertical: parseFloat(elementos.freqVertical.value),
@@ -1533,9 +1570,6 @@
             document.getElementById('info-en-pantalla').textContent = resultado.dentro_pantalla ? 'Sí' : 'No';
         }
 
-        //-------------------------------------------------------------------------------------
-        // FUNCIONES PARA CONTROL DE LISSAJOUS
-        //-------------------------------------------------------------------------------------
         function aplicarPresetLissajous() {
             const presetSeleccionado = elementos.presetSelector.value;
             
@@ -1544,54 +1578,173 @@
                 return;
             }
             
-            // Presets corregidos según el documento
+            // Presets CORREGIDOS - DESFASE δ APLICADO A LA SEÑAL VERTICAL
             const presets = {
-                'linea_diagonal': {
+                // FILA 1: δ (fase) varía de 0 a π, frecuencias 1:1
+                'linea_diagonal': {     // δ = 0
                     frecuencia_vertical: 1.0,
-                    fase_vertical: 0,        // 0 grados - línea diagonal
+                    fase_vertical: 0,        // Sin desfase = línea diagonal
                     amplitud_vertical: 150,
                     frecuencia_horizontal: 1.0,
-                    fase_horizontal: 0,      // 0 grados - sin desfase
+                    fase_horizontal: 0,      // Horizontal siempre en 0
                     amplitud_horizontal: 150
                 },
-                'elipse': {
+                'elipse_45': {          // δ = π/4 (45°)
                     frecuencia_vertical: 1.0,
-                    fase_vertical: 0,        // 0 grados
+                    fase_vertical: 45,       // 45° aplicado a vertical = elipse inclinada
                     amplitud_vertical: 150,
                     frecuencia_horizontal: 1.0,
-                    fase_horizontal: 45,     // 45 grados - elipse
+                    fase_horizontal: 0,      // Horizontal siempre en 0
                     amplitud_horizontal: 150
                 },
-                'circulo': {
+                'circulo': {            // δ = π/2 (90°)
                     frecuencia_vertical: 1.0,
-                    fase_vertical: 0,        // 0 grados
+                    fase_vertical: 90,       // 90° aplicado a vertical = círculo perfecto
                     amplitud_vertical: 150,
                     frecuencia_horizontal: 1.0,
-                    fase_horizontal: 90,     // 90 grados - círculo perfecto
+                    fase_horizontal: 0,      // Horizontal siempre en 0
                     amplitud_horizontal: 150
                 },
-                'ocho': {
-                    frecuencia_vertical: 2.0,    // Doble frecuencia vertical
-                    fase_vertical: 0,            // Empezar en 0
+                'elipse_135': {         // δ = 3π/4 (135°)
+                    frecuencia_vertical: 1.0,
+                    fase_vertical: 135,      // 135° aplicado a vertical = elipse contraria
                     amplitud_vertical: 150,
-                    frecuencia_horizontal: 1.0,  // Frecuencia base
-                    fase_horizontal: 0,          // Sin desfase
+                    frecuencia_horizontal: 1.0,
+                    fase_horizontal: 0,      // Horizontal siempre en 0
                     amplitud_horizontal: 150
                 },
-                'trebol': {
-                    frecuencia_vertical: 3.0,    // Triple frecuencia vertical
-                    fase_vertical: 0,            // Empezar en 0
+                'linea_contraria': {    // δ = π (180°)
+                    frecuencia_vertical: 1.0,
+                    fase_vertical: 180,      // 180° aplicado a vertical = línea contraria
                     amplitud_vertical: 150,
-                    frecuencia_horizontal: 1.0,  // Frecuencia base
-                    fase_horizontal: 0,          // Sin desfase
+                    frecuencia_horizontal: 1.0,
+                    fase_horizontal: 0,      // Horizontal siempre en 0
                     amplitud_horizontal: 150
                 },
-                'mariposa': {
-                    frecuencia_vertical: 3.0,    // 3:2 ratio
-                    fase_vertical: 0,
+                
+                // FILA 2: Ratio 1:2 con diferentes fases verticales
+                'ocho_vertical_0': {    // 1:2, δ = 0
+                    frecuencia_vertical: 2.0,
+                    fase_vertical: 0,        // Sin desfase vertical
+                    amplitud_vertical: 150,
+                    frecuencia_horizontal: 1.0,   // Doble frecuencia horizontal
+                    fase_horizontal: 0,           // Horizontal siempre en 0
+                    amplitud_horizontal: 150
+                },
+                'curva_1_2_45': {       // 1:2, δ = π/4
+                    frecuencia_vertical: 2.0,
+                    fase_vertical: 45,       // 45° aplicado a vertical
+                    amplitud_vertical: 150,
+                    frecuencia_horizontal: 1.0,
+                    fase_horizontal: 0,      // Horizontal siempre en 0
+                    amplitud_horizontal: 150
+                },
+                'ocho_cerrado': {       // 1:2, δ = π/2
+                    frecuencia_vertical: 2.0,
+                    fase_vertical: 90,       // 90° aplicado a vertical
+                    amplitud_vertical: 150,
+                    frecuencia_horizontal: 1.0,
+                    fase_horizontal: 0,      // Horizontal siempre en 0
+                    amplitud_horizontal: 150
+                },
+                'curva_1_2_135': {      // 1:2, δ = 3π/4
+                    frecuencia_vertical: 2.0,
+                    fase_vertical: 135,      // 135° aplicado a vertical
+                    amplitud_vertical: 150,
+                    frecuencia_horizontal: 1.0,
+                    fase_horizontal: 0,      // Horizontal siempre en 0
+                    amplitud_horizontal: 150
+                },
+                'ocho_abierto': {       // 1:2, δ = π
+                    frecuencia_vertical: 2.0,
+                    fase_vertical: 180,      // 180° aplicado a vertical
+                    amplitud_vertical: 150,
+                    frecuencia_horizontal: 1.0,
+                    fase_horizontal: 0,      // Horizontal siempre en 0
+                    amplitud_horizontal: 150
+                },
+                
+                // FILA 3: Ratio 1:3 con diferentes fases verticales
+                'trebol_1_3_0': {       // 1:3, δ = 0
+                    frecuencia_vertical: 3.0,
+                    fase_vertical: 0,        // Sin desfase vertical
+                    amplitud_vertical: 150,
+                    frecuencia_horizontal: 1.0,   // Triple frecuencia horizontal
+                    fase_horizontal: 0,           // Horizontal siempre en 0
+                    amplitud_horizontal: 150
+                },
+                'trebol_1_3_45': {      // 1:3, δ = π/4
+                    frecuencia_vertical: 3.0,
+                    fase_vertical: 45,       // 45° aplicado a vertical
+                    amplitud_vertical: 150,
+                    frecuencia_horizontal: 1.0,
+                    fase_horizontal: 0,      // Horizontal siempre en 0
+                    amplitud_horizontal: 150
+                },
+                'trebol_1_3_90': {      // 1:3, δ = π/2
+                    frecuencia_vertical: 3.0,
+                    fase_vertical: 90,       // 90° aplicado a vertical
+                    amplitud_vertical: 150,
+                    frecuencia_horizontal: 1.0,
+                    fase_horizontal: 0,      // Horizontal siempre en 0
+                    amplitud_horizontal: 150
+                },
+                'trebol_1_3_135': {     // 1:3, δ = 3π/4
+                    frecuencia_vertical: 3.0,
+                    fase_vertical: 135,      // 135° aplicado a vertical
+                    amplitud_vertical: 150,
+                    frecuencia_horizontal: 1.0,
+                    fase_horizontal: 0,      // Horizontal siempre en 0
+                    amplitud_horizontal: 150
+                },
+                'trebol_1_3_180': {     // 1:3, δ = π
+                    frecuencia_vertical: 3.0,
+                    fase_vertical: 180,      // 180° aplicado a vertical
+                    amplitud_vertical: 150,
+                    frecuencia_horizontal: 1.0,
+                    fase_horizontal: 0,      // Horizontal siempre en 0
+                    amplitud_horizontal: 150
+                },
+                
+                // FILA 4: Ratio 2:3 con diferentes fases verticales
+                'complejo_2_3_0': {     // 2:3, δ = 0
+                    frecuencia_vertical: 3.0,
+                    fase_vertical: 0,        // Sin desfase vertical
                     amplitud_vertical: 150,
                     frecuencia_horizontal: 2.0,
-                    fase_horizontal: 90,         // 90 grados desfase
+                    fase_horizontal: 0,      // Horizontal siempre en 0
+                    amplitud_horizontal: 150
+                },
+                'complejo_2_3_45': {    // 2:3, δ = π/4
+                    frecuencia_vertical: 3.0,
+                    fase_vertical: 45,       // 45° aplicado a vertical
+                    amplitud_vertical: 150,
+                    frecuencia_horizontal: 2.0,
+                    fase_horizontal: 0,      // Horizontal siempre en 0
+                    amplitud_horizontal: 150
+                },
+                'mariposa': {           // 2:3, δ = π/2 - Patrón de mariposa
+                    frecuencia_vertical: 3.0,
+                    fase_vertical: 90,       // 90° aplicado a vertical
+                    amplitud_vertical: 150,
+                    frecuencia_horizontal: 2.0,
+                    fase_horizontal: 0,      // Horizontal siempre en 0
+                    amplitud_horizontal: 150
+                },
+                'complejo_2_3_135': {   // 2:3, δ = 3π/4
+                    frecuencia_vertical: 3.0,
+                    fase_vertical: 135,      // 135° aplicado a vertical
+                    amplitud_vertical: 150,
+                    frecuencia_horizontal: 2.0,
+                    fase_horizontal: 0,      // Horizontal siempre en 0
+                    amplitud_horizontal: 150
+                },
+                'complejo_2_3_180': {   // 2:3, δ = π
+                    frecuencia_vertical: 3.0,
+                    fase_vertical: 180,      // 180° aplicado a vertical
+                    amplitud_vertical: 150,
+                    frecuencia_horizontal: 2.0,
+                    fase_horizontal: 0,      // Horizontal siempre en 0
                     amplitud_horizontal: 150
                 }
             };
@@ -1667,6 +1820,7 @@
             cambiarModo('manual');
             dibujarEstructuraCRT();
             actualizarSimulacion();
+            actualizarSelectorPresets();
         }
 
         // Eventos del panel de información
