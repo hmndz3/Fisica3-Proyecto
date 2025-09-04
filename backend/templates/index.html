@@ -1402,7 +1402,11 @@
                 ctx.beginPath();
                 ctx.moveTo(width * 0.13, height/2);
                 ctx.lineTo(width * 0.45, height/2);
-                const deflexionX = resultado.posicion_x * width * 10;
+                
+                // CORREGIDO: Aplicar deflexión horizontal con escala ajustada
+                // En vista superior, la deflexión horizontal se muestra como movimiento vertical en el canvas
+                const deflexionX = resultado.posicion_x * height * 5; // Escala reducida de 10 a 5
+                
                 ctx.lineTo(width * 0.55, height/2 + deflexionX);
                 ctx.lineTo(width * 0.9, height/2 + deflexionX * 1.5);
                 ctx.stroke();
