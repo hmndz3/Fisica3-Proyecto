@@ -591,12 +591,12 @@
                     <div class="control-grupo">
                         <select id="preset-selector" class="preset-selector">
                             <option value="">Seleccionar Preset...</option>
-                            <option value="circulo">Círculo</option>
-                            <option value="linea_diagonal">Línea Diagonal</option>
-                            <option value="elipse">Elipse</option>
-                            <option value="ocho">Figura en 8</option>
-                            <option value="trebol">Trébol</option>
-                            <option value="mariposa">Mariposa</option>
+                            <option value="linea_diagonal">Línea Diagonal (1:1, δ=0°)</option>
+                            <option value="elipse">Elipse (1:1, δ=45°)</option>
+                            <option value="circulo">Círculo (1:1, δ=90°)</option>
+                            <option value="ocho">Figura en 8 (2:1)</option>
+                            <option value="trebol">Trébol (3:1)</option>
+                            <option value="mariposa">Mariposa (3:2, δ=90°)</option>
                         </select>
                         <button class="btn-accion" id="btn-aplicar-preset">Aplicar Preset</button>
                     </div>
@@ -974,18 +974,67 @@
         function actualizarParametrosLissajous() {
             estadoActual.parametrosLissajous = {
                 frecuencia_vertical: parseFloat(elementos.freqVertical.value),
-                fase_vertical: parseFloat(elementos.faseVertical.value) * Math.PI / 180,
+                fase_vertical: parseFloat(elementos.faseVertical.value),      // En grados
                 amplitud_vertical: parseFloat(elementos.ampVertical.value),
                 frecuencia_horizontal: parseFloat(elementos.freqHorizontal.value),
-                fase_horizontal: parseFloat(elementos.faseHorizontal.value) * Math.PI / 180,
+                fase_horizontal: parseFloat(elementos.faseHorizontal.value),  // En grados  
                 amplitud_horizontal: parseFloat(elementos.ampHorizontal.value)
             };
             
+            // Reiniciar animación si estamos en modo Lissajous
             if (estadoActual.modo === 'lissajous') {
                 estadoActual.tiempoInicioAnimacion = Date.now();
             }
         }
 
+        function limpiarPantallaCompleta() {
+            const ctx = elementos.canvasPantalla.getContext('2d');
+            const width = elementos.canvasPantalla.width;
+            const height = elementos.canvasPantalla.height;
+            
+            // Limpiar completamente con negro
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(0, 0, width, height);
+            
+            // Redibujar grid de referencia
+            ctx.strokeStyle = 'rgba(69, 183, 209, 0.15)';
+            ctx.lineWidth = 1;
+            
+            const gridSize = Math.min(width, height) / 20;
+            
+            // Líneas verticales del grid
+            for (let x = 0; x < width; x += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, height);
+                ctx.stroke();
+            }
+            
+            // Líneas horizontales del grid
+            for (let y = 0; y < height; y += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(width, y);
+                ctx.stroke();
+            }
+            
+            // Cruz central más visible
+            ctx.strokeStyle = 'rgba(69, 183, 209, 0.4)';
+            ctx.lineWidth = 2;
+            
+            // Línea vertical central
+            ctx.beginPath();
+            ctx.moveTo(width/2, 0);
+            ctx.lineTo(width/2, height);
+            ctx.stroke();
+            
+            // Línea horizontal central
+            ctx.beginPath();
+            ctx.moveTo(0, height/2);
+            ctx.lineTo(width, height/2);
+            ctx.stroke();
+        }
+        
         function actualizarValoresDisplay() {
             const slidersManual = [
                 elementos.voltajeAceleracion,
@@ -1090,12 +1139,17 @@
         function generarVoltajesLissajous(tiempo) {
             const config = estadoActual.parametrosLissajous;
             
+            // Convertir fases de grados a radianes CORRECTAMENTE
+            const faseVerticalRad = config.fase_vertical * Math.PI / 180;
+            const faseHorizontalRad = config.fase_horizontal * Math.PI / 180;
+            
+            // Generar señales sinusoidales
             const voltajeVertical = config.amplitud_vertical * Math.sin(
-                2 * Math.PI * config.frecuencia_vertical * tiempo + config.fase_vertical
+                2 * Math.PI * config.frecuencia_vertical * tiempo + faseVerticalRad
             );
             
             const voltajeHorizontal = config.amplitud_horizontal * Math.sin(
-                2 * Math.PI * config.frecuencia_horizontal * tiempo + config.fase_horizontal
+                2 * Math.PI * config.frecuencia_horizontal * tiempo + faseHorizontalRad
             );
             
             return {
@@ -1486,59 +1540,61 @@
                 return;
             }
             
+            // Presets corregidos según el documento
             const presets = {
-                'circulo': {
-                    frecuencia_vertical: 1.0,
-                    fase_vertical: 0,
-                    amplitud_vertical: 100,
-                    frecuencia_horizontal: 1.0,
-                    fase_horizontal: 90,
-                    amplitud_horizontal: 100
-                },
                 'linea_diagonal': {
                     frecuencia_vertical: 1.0,
-                    fase_vertical: 0,
-                    amplitud_vertical: 100,
+                    fase_vertical: 0,        // 0 grados - línea diagonal
+                    amplitud_vertical: 150,
                     frecuencia_horizontal: 1.0,
-                    fase_horizontal: 0,
-                    amplitud_horizontal: 100
+                    fase_horizontal: 0,      // 0 grados - sin desfase
+                    amplitud_horizontal: 150
                 },
                 'elipse': {
                     frecuencia_vertical: 1.0,
-                    fase_vertical: 0,
-                    amplitud_vertical: 100,
+                    fase_vertical: 0,        // 0 grados
+                    amplitud_vertical: 150,
                     frecuencia_horizontal: 1.0,
-                    fase_horizontal: 60,
-                    amplitud_horizontal: 100
+                    fase_horizontal: 45,     // 45 grados - elipse
+                    amplitud_horizontal: 150
+                },
+                'circulo': {
+                    frecuencia_vertical: 1.0,
+                    fase_vertical: 0,        // 0 grados
+                    amplitud_vertical: 150,
+                    frecuencia_horizontal: 1.0,
+                    fase_horizontal: 90,     // 90 grados - círculo perfecto
+                    amplitud_horizontal: 150
                 },
                 'ocho': {
-                    frecuencia_vertical: 2.0,
-                    fase_vertical: 0,
-                    amplitud_vertical: 100,
-                    frecuencia_horizontal: 1.0,
-                    fase_horizontal: 90,
-                    amplitud_horizontal: 100
+                    frecuencia_vertical: 2.0,    // Doble frecuencia vertical
+                    fase_vertical: 0,            // Empezar en 0
+                    amplitud_vertical: 150,
+                    frecuencia_horizontal: 1.0,  // Frecuencia base
+                    fase_horizontal: 0,          // Sin desfase
+                    amplitud_horizontal: 150
                 },
                 'trebol': {
-                    frecuencia_vertical: 3.0,
-                    fase_vertical: 0,
-                    amplitud_vertical: 100,
-                    frecuencia_horizontal: 1.0,
-                    fase_horizontal: 0,
-                    amplitud_horizontal: 100
+                    frecuencia_vertical: 3.0,    // Triple frecuencia vertical
+                    fase_vertical: 0,            // Empezar en 0
+                    amplitud_vertical: 150,
+                    frecuencia_horizontal: 1.0,  // Frecuencia base
+                    fase_horizontal: 0,          // Sin desfase
+                    amplitud_horizontal: 150
                 },
                 'mariposa': {
-                    frecuencia_vertical: 3.0,
+                    frecuencia_vertical: 3.0,    // 3:2 ratio
                     fase_vertical: 0,
-                    amplitud_vertical: 100,
+                    amplitud_vertical: 150,
                     frecuencia_horizontal: 2.0,
-                    fase_horizontal: 45,
-                    amplitud_horizontal: 100
+                    fase_horizontal: 90,         // 90 grados desfase
+                    amplitud_horizontal: 150
                 }
             };
             
             const preset = presets[presetSeleccionado];
             if (preset) {
+                // Aplicar valores a los sliders
                 elementos.freqVertical.value = preset.frecuencia_vertical;
                 elementos.faseVertical.value = preset.fase_vertical;
                 elementos.ampVertical.value = preset.amplitud_vertical;
@@ -1546,24 +1602,40 @@
                 elementos.faseHorizontal.value = preset.fase_horizontal;
                 elementos.ampHorizontal.value = preset.amplitud_horizontal;
                 
+                // Actualizar displays
                 actualizarValoresDisplay();
+                
+                // Actualizar parámetros internos
                 actualizarParametrosLissajous();
                 
-                console.log(`✅ Preset aplicado: ${presetSeleccionado}`);
+                console.log(`✅ Preset aplicado: ${presetSeleccionado}`, preset);
                 
+                // Reiniciar animación limpiamente
                 if (estadoActual.modo === 'lissajous') {
-                    limpiarPantalla();
-                    iniciarAnimacionLissajous();
+                    limpiarPantallaCompleta();
+                    reiniciarAnimacionLissajous();
                 }
             }
         }
 
         function reiniciarAnimacion() {
             if (estadoActual.modo === 'lissajous') {
-                limpiarPantalla();
+                // Limpiar animación anterior
+                if (estadoActual.intervalos.lissajous) {
+                    clearInterval(estadoActual.intervalos.lissajous);
+                    estadoActual.intervalos.lissajous = null;
+                }
+                
+                // Limpiar pantalla completamente
+                limpiarPantallaCompleta();
+                
+                // Reiniciar tiempo desde 0
                 estadoActual.tiempoInicioAnimacion = Date.now();
+                
+                // Iniciar nueva animación
                 iniciarAnimacionLissajous();
-                console.log('🔄 Animación Lissajous reiniciada');
+                
+                console.log('🔄 Animación Lissajous reiniciada desde el inicio');
             }
         }
 
